@@ -1,0 +1,20 @@
+<html>
+<head>
+
+</head>
+
+<body>
+
+<iframe id="myFrame" width="1000" height="800" src="worker3.html"></iframe>
+
+<script type="text/javascript">
+function refreshFrame(id) {
+  var frame = document.getElementById(id);
+  frame.src = frame.src;
+  setTimeout("refreshFrame('"+ id +"')", 3600000);
+}
+setTimeout("refreshFrame('myFrame')", 3600000);
+</script>
+
+</body>
+</html>

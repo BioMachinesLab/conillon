@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Conillon.makejars" default="conillon" basedir="dist">
+	<description>
+	       Creates all Conillon Jar's
+	    </description>
+
+	<property name="codeServer" location="../../CodeServer/bin" />
+	<property name="codeServerSrc" location="../../CodeServer/src" />
+	<property name="masterServer" location="../../MasterServer/bin" />
+	<property name="masterServerSrc" location="../../MasterServer/src" />
+	<property name="base" location="../../BaseClient/bin" />
+	<property name="baseSrc" location="../../BaseClient/src" />
+	<property name="admin" location="../../ConillonAdmin/bin" />
+	<property name="adminSrc" location="../../ConillonAdmin/src" />
+	<property name="worker" location="../../WorkerApplication/bin" />
+	<property name="workerSrc" location="../../WorkerApplication/src" />
+	<property name="web_runner" location="../../WebRunner/bin" />
+	<property name="dist" location="dist" />
+
+
+	<path id="classpath">
+		<fileset dir="${base}" includes="**/*.class" />
+	</path>
+
+	<target name="conillon" depends="clean, compile, make_base, make_worker, make_admin, make_webRunner, Code_create_run_jar, Master_create_run_jar">
+	
+	</target>
+
+	<target name="clean">
+		<delete dir="**/*.jar" />
+	</target>
+
+	<target name="compile">
+		<javac includeantruntime="false" srcdir="${baseSrc}" destdir="${base}">
+			<include name="*.java" />
+		</javac>
+		<javac includeantruntime="false" srcdir="${codeServerSrc}" destdir="${codeServer}">
+			<include name="*.java" />
+		</javac>
+	</target>
+
+	<target name="make_base" description="Base" depends="clean">
+		<jar jarfile="Base.jar" includes="*.class" basedir="${base}" />
+	</target>
+
+	<target name="make_worker" description="Create a jar for the Worker" depends="make_base">
+		<jar destfile="WorkerD.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="main.Main" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${worker}" />
+			<fileset dir="${base}" />
+			<zipfileset excludes="META-INF/*.SF" src="/Users/sanchooliveira/git/code/BaseClient/javassist.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="/Users/sanchooliveira/git/code/BaseClient/asm-all-4.0.jar" />
+		</jar>
+	</target>
+
+
+	<target name="make_admin" description="Create a jar for the Admin" depends="make_base">
+		<jar jarfile="Admin.jar" includes="*.class" basedir="${admin}" />
+	</target>
+	
+	<target name="make_webRunner" description="Create a jar for the WebRunner">
+		<jar jarfile="WebRunner.jar" includes="*.class" basedir="${web_runner}" />
+	</target>
+
+
+	<target name="Code_create_run_jar" depends="make_base">
+		<jar destfile="CodeServe.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="code.ClassCodeServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${codeServer}" />
+			<zipfileset excludes="META-INF/*.SF" src="Base.jar" />
+		</jar>
+	</target>
+
+	<target name="Master_create_run_jar" depends="make_base">
+		<jar destfile="MasterServe.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="masterserver.CommServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${masterServer}" />
+			<fileset dir="${base}" />
+			<zipfileset excludes="META-INF/*.SF" src="../../BaseClient/javassist.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="../../BaseClient/asm-all-4.0.jar" />
+		</jar>
+	</target>
+
+</project>
