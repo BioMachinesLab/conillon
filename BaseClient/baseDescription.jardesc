@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="MacRoman" standalone="no"?>
+<jardesc>
+    <jar path="CodeServer/Base.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/BaseClient/baseDescription.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="/BaseClient/baseManifest" manifestVersion="1.0" reuseManifest="false" saveManifest="true" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <file path="/BaseClient/.project"/>
+        <file path="/BaseClient/t.umldi"/>
+        <javaElement handleIdentifier="=BaseClient/src"/>
+        <file path="/BaseClient/.reverse.properties"/>
+        <file path="/BaseClient/.classpath"/>
+        <file path="/BaseClient/t.uml"/>
+    </selectedElements>
+</jardesc>
