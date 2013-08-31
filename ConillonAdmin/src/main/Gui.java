@@ -22,7 +22,9 @@ import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -50,14 +52,13 @@ import client.ClientData;
 import comm.ConnectionType;
 
 public class Gui extends JApplet implements ActionListener {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 	// North
 	private JTextField inputWorker;
 	private JTextField inputClient;
 	private JButton kickWorker;
+	private JButton killWorker;
 	private JButton kickClient;
 	private JLabel serverTime;
 
@@ -68,8 +69,6 @@ public class Gui extends JApplet implements ActionListener {
 	private JLabel numberOfProcessedTasks;
 	private JLabel averageSystemSpeed;
 	private String serverAddress = "localhost";
-	// private String serverAddress = "evolve.dcti.iscte.pt";
-	// private String serverAddress; // = "10.40.50.96";
 	private int serverPort = 10001;
 	private JButton connect;
 
@@ -79,9 +78,6 @@ public class Gui extends JApplet implements ActionListener {
 
 	WorkerTableModel workerTableModel;
 	ClientTableModel clientTableModel;
-
-	// protected Long[] workerKeys = new Long[65535];
-	// protected Long[] clientKeys = new Long[65535];
 
 	private Object[] workerKeys;
 	private Object[] clientKeys;
@@ -100,47 +96,42 @@ public class Gui extends JApplet implements ActionListener {
 	private GraphingData coresGraph = new GraphingData();
 	private GraphingData idleGraph = new GraphingData();
 	private GraphingData pendingGraph = new GraphingData();
+	private boolean connected = false;
 
 	public void init() {
-		// serverAddress = getCodeBase().toString();
-		// serverAddress= serverAddress.substring(7, serverAddress.length()-1);
-		// if(serverAddress.contains(":")){
-		// serverAddress=serverAddress.substring(0,serverAddress.indexOf(':'));
-		// }
-
-		// serverAddress = getCodeBase().toString();
-		// serverAddress = serverAddress.substring(7, serverAddress.length() -
-		// 1);
-		// if (serverAddress.contains(":")) {
-		// serverAddress = serverAddress.substring(0,
-		// serverAddress.indexOf(':'));
-		// }
-
-		// serverAddress = getCodeBase().toString();
-		// serverAddress= serverAddress.substring(7, serverAddress.length()-1);
-		// if(serverAddress.contains(":")){
-		// serverAddress=serverAddress.substring(0,serverAddress.indexOf(':'));
-		// }
 
 		gui();
-		boolean connected = false;
+		boolean firstTime = true;
 		while (!connected) {
-			try {
-
-				Socket socket = new Socket(this.serverAddress, this.serverPort);
-				in = new ObjectInputStream(socket.getInputStream());
-				out = new ObjectOutputStream(socket.getOutputStream());
-				out.writeObject(ConnectionType.ADMIN);
-				Listener l = new Listener(socket);
-				l.start();
-				Command c = new Command();
-				c.start();
-				connected = true;
-			} catch (IOException e) {
-				this.serverAddress = JOptionPane
-						.showInputDialog("Can't connect to " + serverAddress
-								+ ". Please insert Conillon server address:");
+			connect();
+			
+			if(!firstTime) {
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
+			firstTime = false;
+		}
+	}
+
+	private void connect() {
+		connected = false;
+		try {
+			Socket socket = new Socket(this.serverAddress, this.serverPort);
+			in = new ObjectInputStream(socket.getInputStream());
+			out = new ObjectOutputStream(socket.getOutputStream());
+			out.writeObject(ConnectionType.ADMIN);
+			connected = true;
+			Listener l = new Listener(socket);
+			l.start();
+			Command c = new Command();
+			c.start();
+			tabbedPane.setBackground(Color.LIGHT_GRAY);
+		} catch (Exception e) {
+			System.out.println("Can't connect to "+serverAddress);
+			tabbedPane.setBackground(Color.RED);
 		}
 	}
 
@@ -148,24 +139,25 @@ public class Gui extends JApplet implements ActionListener {
 
 		public void run() {
 			while (true) {
+				if(!connected)
+					break;
 
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						System.in));
 				try {
-					String cmd = br.readLine();
+				String cmd = br.readLine();
 
-					synchronized (out) {
-						out.writeObject(ConnectionType.KILL_CLIENT);
-						out.writeObject(Long.parseLong(cmd));
-					}
-
-				} catch (IOException e) {
-					e.printStackTrace();
+				synchronized (out) {
+					out.writeObject(ConnectionType.KILL_CLIENT);
+					out.writeObject(Long.parseLong(cmd));
 				}
 
+				} catch (IOException e) {
+					connected = false;
+					e.printStackTrace();
+				}
 			}
 		}
-
 	}
 
 	private class Listener extends Thread {
@@ -175,10 +167,10 @@ public class Gui extends JApplet implements ActionListener {
 		private int lastProcessed = 0;
 		private double alpha = 2.0 / (20 + 1);
 		private double speedEMA20 = 0;
+		private HashMap<Long,WorkerData> workerData = new HashMap<Long,WorkerData>();
 
 		public Listener(Socket socket) {
 			super();
-
 			this.socket = socket;
 		}
 
@@ -186,171 +178,163 @@ public class Gui extends JApplet implements ActionListener {
 		public void run() {
 			new TimeToUpdate().start();
 			while (true) {
-				try {
-					ConnectionType ct = (ConnectionType) in.readObject();
-					switch (ct) {
-					case FULL_UPDATE:
-
-						int clientSelecteRow = jTableClient.getSelectedRow();
-						int workerSelecteRow = jTableWorker.getSelectedRow();
-
-						Long newServerTime = (Long) in.readObject();
-						Long elapsedTime = (currentServerTime == null) ? 1
-								: newServerTime - currentServerTime;
-						currentServerTime = newServerTime;
-						serverTime.setText("Server Time: "
-								+ new Time(currentServerTime - 3600000)
-										.toString());
-						workerDataVector = (Hashtable<Long, WorkerData>) in
-								.readObject();
-						clientDataVector = (Hashtable<Long, ClientData>) in
-								.readObject();
-
-						if (workerDataVector.keySet() != null
-								&& !workerDataVector.keySet().isEmpty()) {
-							workerKeys = workerDataVector.keySet().toArray();
-							numberOfWorkers.setText(String
-									.valueOf(workerDataVector.size()));
-							// updtateStatus();
-
-							int totalProcessed = 0;
-							double numCores = 0;
-							double numIdle = 0;
-							for (WorkerData wd : workerDataVector.values()) {
-								totalProcessed += wd
-										.getNumberOfTasksProcessed();
-								numCores += wd.getNumberOfProcessors();
-								if (wd.getNumberOfRequestedTasks() < wd
-										.getNumberOfProcessors()) {
-									numIdle += wd.getNumberOfProcessors()
-											- wd.getNumberOfRequestedTasks();
+				if(!connected) {
+					break;
+				} else {
+					try {
+						ConnectionType ct = (ConnectionType) in.readObject();
+						switch (ct) {
+						case FULL_UPDATE:
+	
+							int clientSelecteRow = jTableClient.getSelectedRow();
+							int workerSelecteRow = jTableWorker.getSelectedRow();
+	
+							Long newServerTime = (Long) in.readObject();
+							Long elapsedTime = (currentServerTime == null) ? 1
+									: newServerTime - currentServerTime;
+							currentServerTime = newServerTime;
+							serverTime.setText("Server Time: "
+									+ new Time(currentServerTime - 3600000)
+											.toString());
+							workerDataVector = (Hashtable<Long, WorkerData>) in
+									.readObject();
+							clientDataVector = (Hashtable<Long, ClientData>) in
+									.readObject();
+	
+							if (workerDataVector.keySet() != null
+									&& !workerDataVector.keySet().isEmpty()) {
+								workerKeys = workerDataVector.keySet().toArray();
+								numberOfWorkers.setText(String
+										.valueOf(workerDataVector.size()));
+	
+								int totalProcessed = 0;
+								double numCores = 0;
+								double numIdle = 0;
+								
+								for (WorkerData wd : workerDataVector.values()) {
+									
+									workerData.put(wd.getId(), wd);
+									
+									numCores += wd.getNumberOfProcessors();
+									if (wd.getNumberOfRequestedTasks() < wd.getNumberOfProcessors()) {
+										numIdle += wd.getNumberOfProcessors()
+												- wd.getNumberOfRequestedTasks();
+									}
 								}
-							}
-							if (lastProcessed == 0) {
+								
+								for(WorkerData wd : workerData.values())
+									totalProcessed+= wd.getNumberOfTasksProcessed();
+								
+								if (lastProcessed == 0) {
+									lastProcessed = totalProcessed;
+								}
+								
+								processedTasks += totalProcessed - lastProcessed;
+	
+								numberOfProcessedTasks.setText(String.valueOf(processedTasks));
+								
+								double speed = ((int) ((totalProcessed - lastProcessed) * 1000000.0 / elapsedTime)) / 1000.0;
+								
+								speedGraph.addData(speed);
+								coresGraph.addData(numCores);
+								idleGraph.addData(numIdle);
+	
+								speedEMA20 = speedEMA20 + alpha
+										* (speed - speedEMA20);
+								averageSystemSpeed
+										.setText(String
+												.valueOf(((int) (speedEMA20 * 1000)) / 1000.0)
+												+ " ("
+												+ String.valueOf(speed)
+												+ ")");
+	
 								lastProcessed = totalProcessed;
+								workerTableModel.fireTableDataChanged();
+								if (workerSelecteRow >= 0
+										&& workerSelecteRow < workerTableModel
+												.getRowCount()) {
+									jTableWorker.setRowSelectionInterval(
+											workerSelecteRow, workerSelecteRow);
+								}
+	
+							} else {
+								workerKeys = null;
 							}
-							processedTasks += totalProcessed - lastProcessed;
-
-							numberOfProcessedTasks.setText(String
-									.valueOf(processedTasks));
-
-							double speed = ((int) ((totalProcessed - lastProcessed) * 1000000.0 / elapsedTime)) / 1000.0;
-
-							speedGraph.addData(speed);
-							coresGraph.addData(numCores);
-							idleGraph.addData(numIdle);
-
-							speedEMA20 = speedEMA20 + alpha
-									* (speed - speedEMA20);
-							averageSystemSpeed
-									.setText(String
-											.valueOf(((int) (speedEMA20 * 1000)) / 1000.0)
-											+ " ("
-											+ String.valueOf(speed)
-											+ ")");
-
-							lastProcessed = totalProcessed;
-							workerTableModel.fireTableDataChanged();
-							if (workerSelecteRow >= 0
-									&& workerSelecteRow < workerTableModel
-											.getRowCount()) {
-								jTableWorker.setRowSelectionInterval(
-										workerSelecteRow, workerSelecteRow);
+							double numPending = 0;
+	
+							if (clientDataVector.keySet() != null
+									&& !clientDataVector.keySet().isEmpty()) {
+								clientKeys = clientDataVector.keySet().toArray();
+								numberOfClients.setText(String
+										.valueOf(clientDataVector.size()));
+								for (ClientData cd : clientDataVector.values()) {
+	
+									numPending += cd.getTaskCounter()
+											- cd.getTotalNumberOfTasksDone();
+								}
+	
+								clientTableModel.fireTableDataChanged();
+	
+								if (clientSelecteRow >= 0
+										&& clientSelecteRow < clientTableModel
+												.getRowCount()) {
+									jTableClient.setRowSelectionInterval(
+											clientSelecteRow, clientSelecteRow);
+								}
+							} else {
+								clientKeys = null;
 							}
-
-						} else {
-							workerKeys = null;
+	
+							pendingGraph.addData(numPending);
+	
+							break;
+	
+						default:
+							break;
 						}
-						double numPending = 0;
-
-						if (clientDataVector.keySet() != null
-								&& !clientDataVector.keySet().isEmpty()) {
-							clientKeys = clientDataVector.keySet().toArray();
-							numberOfClients.setText(String
-									.valueOf(clientDataVector.size()));
-							for (ClientData cd : clientDataVector.values()) {
-
-								numPending += cd.getTaskCounter()
-										- cd.getTotalNumberOfTasksDone();
-							}
-
-							clientTableModel.fireTableDataChanged();
-
-							if (clientSelecteRow >= 0
-									&& clientSelecteRow < clientTableModel
-											.getRowCount()) {
-								jTableClient.setRowSelectionInterval(
-										clientSelecteRow, clientSelecteRow);
-							}
-						} else {
-							clientKeys = null;
-						}
-
-						pendingGraph.addData(numPending);
-
-						break;
-
-					default:
-						break;
+	
+					} catch (Exception e) {
+						connected = false;
+						e.printStackTrace();
 					}
-
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return;
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return;
 				}
-
+			}
+			while(!connected) {
+				connect();
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		}
-
-		// private void updtateStatus() {
-		// currentTime = System.currentTimeMillis();
-		// for (Long i : workerDataVector.keySet()) {
-		// if (status.keySet().contains(i)) {
-		// status.get(i)
-		// .update(workerDataVector.get(i)
-		// .getNumberOfTasksProcessed(), currentTime);
-		// } else {
-		// status.put(i, new WorkersStatusInfo(workerDataVector.get(i)
-		// .getNumberOfTasksProcessed(), currentTime));
-		// }
-		// }
-		//
-		// }
 
 		private class TimeToUpdate extends Thread {
 
 			public TimeToUpdate() {
 				super();
-
 			}
 
 			public void run() {
 				while (true) {
+					if(!connected)
+						break;
 					try {
 						synchronized (out) {
 							out.writeObject(ConnectionType.FULL_UPDATE);
 						}
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					try {
 						Thread.sleep(time);
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						connected = false;
 						e.printStackTrace();
 					}
 				}
-
 			}
-
 		}
-
 	}
 
 	private void gui() {
@@ -370,17 +354,19 @@ public class Gui extends JApplet implements ActionListener {
 
 		kickWorker = new JButton("Kick Worker");
 		kickWorker.addActionListener(this);
+		
+		killWorker = new JButton("Kill Worker");
+		killWorker.addActionListener(this);
 
 		kickClient = new JButton("Kick Client");
 		kickClient.addActionListener(this);
 
-		// inputNumPlaces.addActionListener(this);
 		JPanel buttonPanel1 = new JPanel();
 		JPanel buttonPanel2 = new JPanel();
 
-		// container.add(buttonPanel1, BorderLayout.SOUTH);
 		buttonPanel1.add(inputWorker);
 		buttonPanel1.add(kickWorker);
+		buttonPanel1.add(killWorker);
 
 		buttonPanel2.add(inputClient);
 		buttonPanel2.add(kickClient);
@@ -397,13 +383,6 @@ public class Gui extends JApplet implements ActionListener {
 		jTableWorker.setRowSorter(sorter);
 
 		jTableWorker.setShowGrid(true);
-
-		// JSplitPane tablePanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		// getContentPane().add(tablePanel);
-		// tablePanel.add(new JScrollPane(jTableWorker));
-		// tablePanel.add(new JScrollPane(jTableClient));
-		//
-		// tablePanel.setDividerLocation(300);
 
 		JPanel buttonPanelNorth = new JPanel();
 
@@ -426,15 +405,12 @@ public class Gui extends JApplet implements ActionListener {
 		buttonPanelNorth.add(new JLabel(" System Speed:"));
 		buttonPanelNorth.add(averageSystemSpeed);
 
-		// container.add(buttonPanelNorth, BorderLayout.NORTH);
-
 		JPanel status = new JPanel(new BorderLayout());
 		container.add(buttonPanelNorth, BorderLayout.NORTH);
 		JPanel graphs = new JPanel(new GridLayout(2, 2));
 		status.add(graphs);
 
 		JPanel speed = new JPanel(new BorderLayout());
-		// speed.add(new JLabel("System Speed"), BorderLayout.NORTH);
 		speed.add(speedGraph);
 		speed.add(makeTimeRangeButtons(speedGraph, "System Speed  -  "),
 				BorderLayout.NORTH);
@@ -442,8 +418,6 @@ public class Gui extends JApplet implements ActionListener {
 		speed.setBorder(BorderFactory.createLoweredBevelBorder());
 
 		JPanel cores = new JPanel(new BorderLayout());
-		// cores.add(new JLabel("Number of available cores"),
-		// BorderLayout.NORTH);
 		cores.add(
 				makeTimeRangeButtons(coresGraph,
 						"Number of available cores   -   "), BorderLayout.NORTH);
@@ -452,7 +426,6 @@ public class Gui extends JApplet implements ActionListener {
 		cores.setBorder(BorderFactory.createLoweredBevelBorder());
 
 		JPanel idle = new JPanel(new BorderLayout());
-		// idle.add(new JLabel("Number of idle workers"), BorderLayout.NORTH);
 		idle.add(
 				makeTimeRangeButtons(idleGraph, "Number of idle cores   -   "),
 				BorderLayout.NORTH);
@@ -461,8 +434,6 @@ public class Gui extends JApplet implements ActionListener {
 		idle.setBorder(BorderFactory.createLoweredBevelBorder());
 
 		JPanel pending = new JPanel(new BorderLayout());
-		// pending.add(new JLabel("Number of tasks ready to be done"),
-		// BorderLayout.NORTH);
 
 		pending.add(
 				makeTimeRangeButtons(pendingGraph,
@@ -470,7 +441,7 @@ public class Gui extends JApplet implements ActionListener {
 				BorderLayout.NORTH);
 		pending.add(pendingGraph);
 		graphs.add(pending);
-		// graphs.add(coresGraph);
+		
 		pending.setBorder(BorderFactory.createLoweredBevelBorder());
 
 		JPanel workers = new JPanel(new BorderLayout());
@@ -485,63 +456,31 @@ public class Gui extends JApplet implements ActionListener {
 		tabbedPane.addTab("Status", status);
 		tabbedPane.add("Workers", workers);
 		tabbedPane.add("Clients", clients);
-		// tabbedPane.addTab("Banned", buttonPanel1);
 
 		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(
 				true));
 		jTableWorker.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isLeftMouseButton(e)) {
-					// if(e.getClickCount()==2){
 					Point p = e.getPoint();
 
 					int row = jTableWorker.rowAtPoint(p);
-					// int column = jTableWorker.columnAtPoint(p);
 					inputWorker.setText(jTableWorker.getValueAt(row, 0)
 							.toString());
-					// }
 				}
 			}
 		});
-		// addKeyListener(new KeyListener() {
-		//
-		// @Override
-		// public void keyTyped(KeyEvent arg0) {
-		//
-		// if (arg0.getKeyCode() == KeyEvent.VK_UP
-		// || arg0.getKeyCode() == KeyEvent.VK_DOWN) {
-		// inputClient.setText(jTableClient.getValueAt(
-		// jTableClient.getSelectedRow(), 0).toString());
-		// }
-		//
-		// }
-		//
-		// @Override
-		// public void keyReleased(KeyEvent arg0) {
-		// // TODO Auto-generated method stub
-		//
-		// }
-		//
-		// @Override
-		// public void keyPressed(KeyEvent arg0) {
-		// // TODO Auto-generated method stub
-		//
-		// }
-		// });
 
 		jTableClient.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isLeftMouseButton(e)) {
-					// if (e.getClickCount() == 2) {
 					Point p = e.getPoint();
 
 					int row = jTableClient.rowAtPoint(p);
-					// int column = jTableClient.columnAtPoint(p);
 					inputClient.setText(jTableClient.getValueAt(row, 0)
 							.toString());
 
 				}
-				// }
 			}
 		});
 
@@ -550,28 +489,20 @@ public class Gui extends JApplet implements ActionListener {
 	private JPanel makeTimeRangeButtons(GraphingData graph, String title) {
 		JPanel panel = new JPanel();
 		JRadioButton minute1 = new JRadioButton("1 min");
-		// minute1.setMnemonic(KeyEvent.VK_B);
 		minute1.setActionCommand("20");
 		
-
 		JRadioButton minute5 = new JRadioButton("10 min");
-		// minute5.setMnemonic(KeyEvent.VK_C);
 		minute5.setActionCommand("200");
 
 		JRadioButton minute10 = new JRadioButton("100 min");
-		// minute10.setMnemonic(KeyEvent.VK_D);
 		minute10.setActionCommand("2000");
 		minute10.setSelected(true);
-		// JRadioButton minute20 = new JRadioButton("20 min");
-		// // minute20.setMnemonic(KeyEvent.VK_R);
-		// minute20.setActionCommand("200");
 
 		// Group the radio buttons.
 		ButtonGroup group = new ButtonGroup();
 		group.add(minute1);
 		group.add(minute5);
 		group.add(minute10);
-		// group.add(minute20);
 
 		JTextField scale = new JTextField("     ");
 
@@ -593,10 +524,8 @@ public class Gui extends JApplet implements ActionListener {
 					graph.setShowLast(Integer.valueOf(e.getActionCommand()));
 				}
 			}
-
 		}
-		;
-
+		
 		ActionL actionL = new ActionL(graph, scale);
 
 		// Register a listener for the radio buttons.
@@ -627,33 +556,43 @@ public class Gui extends JApplet implements ActionListener {
 				try {
 					Thread.sleep(3000);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 		}
-
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
 		Object source = arg0.getSource();
 
 		if (source.equals(kickWorker)) {
 			String workerToKill = inputWorker.getText();
 			if (!workerToKill.isEmpty())
+				kickWorker(Long.parseLong(workerToKill));
+
+		} else if (source.equals(killWorker)) {
+			String workerToKill = inputWorker.getText();
+			if (!workerToKill.isEmpty())
 				killWorker(Long.parseLong(workerToKill));
 
-		} else if (source.equals(kickClient)) {
+		}else if (source.equals(kickClient)) {
 			String clientToKill = inputClient.getText();
 			if (!clientToKill.isEmpty())
 				killClient(Long.parseLong(clientToKill));
 
 		}
-		// JOptionPane.showMessageDialog(this, "teste", "teste!",
-		// JOptionPane.ERROR_MESSAGE);
-
+	}
+	
+	private void kickWorker(long id) {
+		synchronized (out) {
+			try {
+				out.writeObject(ConnectionType.KICK_WORKER);
+				out.writeObject(id);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void killWorker(long id) {
@@ -662,10 +601,8 @@ public class Gui extends JApplet implements ActionListener {
 				out.writeObject(ConnectionType.KILL_WORKER);
 				out.writeObject(id);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -675,18 +612,12 @@ public class Gui extends JApplet implements ActionListener {
 				out.writeObject(ConnectionType.KILL_CLIENT);
 				out.writeObject(id);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
 	}
 
 	class WorkerTableModel extends AbstractTableModel {
-
-		/**
-		 * 
-		 */
 
 		private static final long serialVersionUID = 1L;
 		private static final int GREE_VALUE = 5;
@@ -775,9 +706,6 @@ public class Gui extends JApplet implements ActionListener {
 						/ ((currentServerTime - workerData.getStartTime()) / 1000.0) * 1000) / 1000.0 / workerData
 							.getNumberOfProcessors());
 			case 12:
-				// int lastRefresh =
-				// status.get(workerKeys[workerDataVector.size() - y -
-				// 1]).getNumCiclesWithNoUpdate();
 				int lastRefresh = workerData.getTimeSinceLastTask();
 				Color color;
 				if (lastRefresh <= 25) {
@@ -792,13 +720,11 @@ public class Gui extends JApplet implements ActionListener {
 				return new WorkerStatus(color, lastRefresh);
 			}
 			return "Unknown";
-
 		}
 
 		public Class getColumnClass(int c) {
 			return getValueAt(0, c).getClass();
 		}
-
 	}
 
 	public class ColorRenderer extends JLabel implements TableCellRenderer {
@@ -835,29 +761,21 @@ public class Gui extends JApplet implements ActionListener {
 					setBorder(unselectedBorder);
 				}
 			}
-
-			// setToolTipText("RGB value: " + newColor.getRed() + ", "
-			// + newColor.getGreen() + ", " + newColor.getBlue());
 			return this;
 		}
 	}
 
 	class ClientTableModel extends AbstractTableModel {
 
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		public int getColumnCount() {
-			// TODO Auto-generated method stub
 			return 9;
 		}
 
 		@Override
 		public int getRowCount() {
-			// TODO Auto-generated method stub
 			return clientDataVector.size();
 		}
 
@@ -914,21 +832,15 @@ public class Gui extends JApplet implements ActionListener {
 						/ (clientData.getTotalNumberOfTasksDone()
 								/ ((currentServerTime - clientData
 										.getStartTime()) *1.0)));
-//				Date date = new Date(eat);
-//				DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-//				return formatter.format(date);
 				return  new Time(eat- 3600000);
 			}
 			return "Unknown";
-
 		}
-
 	}
 
 	public void setServer(String serverName) {
 		if (serverName != null) {
 			serverAddress = serverName;
 		}
-
 	}
 }
