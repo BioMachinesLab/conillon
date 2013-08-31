@@ -83,6 +83,7 @@ public class WorkerThread extends Thread implements Observer {
 			ConnectionType type;
 			while (true) {
 				type = (ConnectionType) in.readObject();
+				
 				switch (type) {
 				case WORKER_FEED:
 					feedWorker.feedAnotherTask();
@@ -173,13 +174,7 @@ public class WorkerThread extends Thread implements Observer {
 				}
 			}
 
-		} catch (EOFException e) {
-			System.out.println("EX:" + e);
-			terminateWorker();
-		} catch (IOException e) {
-			// e.printStackTrace();
-			terminateWorker();
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			terminateWorker();
 		}
@@ -232,32 +227,38 @@ public class WorkerThread extends Thread implements Observer {
 						}
 					}
 				}
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				// e1.printStackTrace();
+//			} catch (InterruptedException e1) {
+//				e1.printStackTrace();
+//				System.out.println("PingPong Over!");
+			} catch (Exception e) {//IO
 				System.out.println("PingPong Over!");
-			} catch (IOException e) {
+				e.printStackTrace();
 				terminateWorker();
 				return;
 			}
 
 		}
 	}
-
+	
 	public void terminateWorker() {
+		terminateWorker(false);
+	}
+
+	public void terminateWorker(boolean kick) {
 		try {
 			synchronized (out) {
-				out.writeObject(ConnectionType.KILL_WORKER);
+				out.writeObject(kick ? ConnectionType.KICK_WORKER : ConnectionType.KILL_WORKER);
 			}
-			synchronized (taskList) {
-				Iterator<TaskDescription> taskIterator = taskList.iterator();
-				while (taskIterator.hasNext()) {
-					TaskDescription task = taskIterator.next();
-					master.addSingleTask(task);
-					// changeStatusToTask_FaultTolerance(task,TaskStatus.RESCHEDULED,0);
-				}
-				master.removeWorker(this.workerID, this);
-			}
+//			synchronized (taskList) {
+//				Iterator<TaskDescription> taskIterator = taskList.iterator();
+//				while (taskIterator.hasNext()) {
+//					TaskDescription task = taskIterator.next();
+//					master.addSingleTask(task);
+//					// changeStatusToTask_FaultTolerance(task,TaskStatus.RESCHEDULED,0);
+//				}
+//				master.removeWorker(this.workerID, this);
+//			}
+			
 			taskList.clear();
 			in.close();
 			out.close();
@@ -265,17 +266,18 @@ public class WorkerThread extends Thread implements Observer {
 
 		} catch (IOException e) {
 			try {
-				master.removeWorker(this.workerID, this);
+//watch out				master.removeWorker(this.workerID, this);
 				in.close();
 				out.close();
 				socket.close();
 
 			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
 		}
 		pingpong.interrupt();
 		feedWorker.interrupt();
-
+		master.removeWorker(this.workerID, this);//not here before
 	}
 
 	private class FeedWorker extends Thread {
@@ -297,9 +299,7 @@ public class WorkerThread extends Thread implements Observer {
 						}
 						numberOfTasksToFeed--;
 					}
-
-					TaskDescription taskDescription = master
-							.getTask(workerData);
+					TaskDescription taskDescription = master.getTask(workerData);
 					if (taskDescription == null) {
 						terminateWorker();
 						return;
@@ -321,7 +321,7 @@ public class WorkerThread extends Thread implements Observer {
 						}
 
 					} catch (IOException e) {
-						// e.printStackTrace();
+						e.printStackTrace();
 						terminateWorker();
 					}
 				}
@@ -348,7 +348,7 @@ public class WorkerThread extends Thread implements Observer {
 								out.writeObject(task.getId());
 								out.writeObject(task.getTaskId());
 							} catch (IOException e) {
-								// e.printStackTrace();
+								e.printStackTrace();
 								terminateWorker();
 							}
 						}
@@ -375,7 +375,7 @@ public class WorkerThread extends Thread implements Observer {
 								out.writeObject(task.getId());
 								out.writeObject(task.getTaskId());
 							} catch (IOException e) {
-								// e.printStackTrace();
+								e.printStackTrace();
 								terminateWorker();
 							}
 						}

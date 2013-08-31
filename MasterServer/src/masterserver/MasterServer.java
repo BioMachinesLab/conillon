@@ -68,7 +68,7 @@ public class MasterServer {
 		System.out.println(tmxb.getCurrentThreadCpuTime());
 		System.out.println(tmxb.getCurrentThreadUserTime());
 		System.out.println(tmxb.getDaemonThreadCount());
-		System.out.println("Version: Feb 7 - 2011 - Evolve");
+		System.out.println("Version: Aug 30 - 2013 - Evolve");
 
 	}
 
@@ -175,6 +175,8 @@ public class MasterServer {
 		}
 		taskObserver.deleteObserver(wt);
 		taskObserver.deleteObserver(wt);
+		
+		taskScheduler.removeWorker(id);
 	}
 
 	// void addTaskList(LinkedList<TaskDescription> taskList, long clientID) {
@@ -188,7 +190,6 @@ public class MasterServer {
 
 	public void resendTask(TaskDescription task) {
 		taskScheduler.addToResend(task);
-
 	}
 
 	public void addTaskList(LinkedList<TaskDescription> taskList, int clientID,
@@ -570,9 +571,8 @@ public class MasterServer {
 							}
 						}
 					} catch (IOException e) {
-
+						e.printStackTrace();
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -594,6 +594,15 @@ public class MasterServer {
 			if (workerThread.containsKey(idWorker)) {
 				WorkerThread wt = workerThread.get(idWorker);
 				wt.terminateWorker();
+				workerThread.remove(wt);
+			}
+		}
+	}
+	public void kickWorker(long idWorker) {
+		synchronized (workerThread) {
+			if (workerThread.containsKey(idWorker)) {
+				WorkerThread wt = workerThread.get(idWorker);
+				wt.terminateWorker(true);
 				workerThread.remove(wt);
 			}
 		}

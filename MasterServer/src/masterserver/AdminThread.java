@@ -5,12 +5,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Hashtable;
-
 import org.json.JSONArray;
-
 import worker.WorkerData;
 import client.ClientData;
-
 import comm.ConnectionType;
 
 public class AdminThread extends Thread {
@@ -46,15 +43,20 @@ public class AdminThread extends Thread {
 			ConnectionType type;
 			try {
 				type = (ConnectionType) in.readObject();
-
+				long idWorker;
+				
 				switch (type) {
 				case FULL_UPDATE:
 					fullUpdate();
 
 					break;
 				case KILL_WORKER:
-					long idWorker = (Long) in.readObject();
+					idWorker = (Long) in.readObject();
 					master.killWorker(idWorker);
+					break;
+				case KICK_WORKER:
+					idWorker = (Long) in.readObject();
+					master.kickWorker(idWorker);
 					break;
 				case KILL_CLIENT:
 					long idClient = (Long) in.readObject();
@@ -76,7 +78,6 @@ public class AdminThread extends Thread {
 					socket.close();
 					return;
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 					return;
 				}
@@ -87,13 +88,11 @@ public class AdminThread extends Thread {
 					socket.close();
 					return;
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
 				return;
 			}
-
 		}
 	}
 
@@ -109,7 +108,5 @@ public class AdminThread extends Thread {
 			out.writeObject(clientDataVector);
 			out.reset();
 		}
-
 	}
-
 }

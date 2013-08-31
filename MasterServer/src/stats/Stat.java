@@ -11,10 +11,7 @@ public class Stat {
 	private int inputedTasks = 0;
 	private int tasksServed = 0;
 	
-	
 	private int availableCores = 0;
-	
-	
 	
 	public Stat() {
 		super();

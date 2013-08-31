@@ -162,8 +162,7 @@ class ClientThread extends Thread {
 						try {
 							localTaskList.wait();
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							// e.printStackTrace();
+							e.printStackTrace();
 							return;
 						}
 					}
@@ -180,7 +179,6 @@ class ClientThread extends Thread {
 							cd.addTotalNumberOfTasksDone();
 
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 							return;
 						}

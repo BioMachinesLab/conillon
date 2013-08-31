@@ -55,7 +55,6 @@ public class TaskScheduler {
 					return;
 				}
 			}
-
 			workingTasks.addFirst(new WorkerTasks(task, id));
 		}
 
@@ -90,8 +89,7 @@ public class TaskScheduler {
 		}
 		synchronized (workingTasks) {
 			for (WorkerTasks wt : workingTasks) {
-				if (wt.getNumberWorkers() == 1
-						&& wt.taskNotOnWorker(workerData.getId())) {
+				if ((wt.getNumberWorkers() ==0 || wt.getNumberWorkers() == 1) && wt.taskNotOnWorker(workerData.getId())) {
 					return wt.task;
 				}
 			}
@@ -207,6 +205,10 @@ public class TaskScheduler {
 		public void add(Long client) {
 			workers.add(client);
 		}
+		
+		public void remove(Long client) {
+			workers.remove(client);
+		}
 
 		public TaskDescription getTask() {
 			return task;
@@ -259,6 +261,21 @@ public class TaskScheduler {
 			return tasks.pollFirst();
 		}
 
+	}
+
+	public void removeWorker(long id) {
+		synchronized (workingTasks) {
+			Iterator<WorkerTasks> iterator = workingTasks.iterator();
+			while (iterator.hasNext()){
+				WorkerTasks task = iterator.next();
+				if(!task.taskNotOnWorker(id)) {
+					task.remove(new Long(id));
+				}
+			}
+		}
+		synchronized (this) {
+			notifyAll();
+		}
 	}
 
 	// public TaskScheduler(LinkedList<TaskDescription> lastUsedLinkedList, int

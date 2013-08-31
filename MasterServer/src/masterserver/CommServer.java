@@ -224,18 +224,15 @@ public class CommServer {
 					}
 				}
 
-			} catch (IOException e) {
-
-				// e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-
+			} catch (Exception e) {
+				e.printStackTrace();
 				try {
 					in.close();
 					out.close();
 					socket.close();
 				} catch (IOException e1) {
 
-					// e1.printStackTrace();
+					 e1.printStackTrace();
 				}
 				return;
 
@@ -299,6 +296,7 @@ public class CommServer {
 				// Get hostname
 				args[0] = addr.getHostAddress();
 			} catch (UnknownHostException e) {
+				e.printStackTrace();
 			}
 
 		}
