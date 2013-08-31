@@ -38,7 +38,7 @@ public class Webserver extends Thread {
 				new DealWithClient(connectionsocket).start();
 			} catch (Exception e) {
 				System.out.println(e);
-
+				e.printStackTrace();
 			}
 
 		}
@@ -67,6 +67,7 @@ public class Webserver extends Thread {
 				http_handler(input, output);
 			} catch (IOException e) {
 				System.out.println(e);
+				e.printStackTrace();
 			}
 		}
 	}
@@ -218,6 +219,7 @@ public class Webserver extends Thread {
 				try {
 					// if you could not open the file send a 404
 					System.out.println("File doesn't exists " + path);
+					e.printStackTrace();
 					output.writeBytes(construct_http_header(404, 0));
 					output.close();
 				} catch (Exception e2) {

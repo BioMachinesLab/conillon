@@ -42,11 +42,13 @@ public class CompressedObjectInputStream extends ObjectInputStream {
 		            int count = decompressor.inflate(buf);
 		            bos.write(buf, 0, count);
 		        } catch (DataFormatException e) {
+		        	e.printStackTrace();
 		        }
 		    }
 		    try {
 		        bos.close();
 		    } catch (IOException e) {
+		    	e.printStackTrace();
 		    }
 		    
 		    // Get the decompressed data

@@ -203,7 +203,7 @@ public class ClassCodeServer {
 				// e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
-				// e.printStackTrace();
+				 e.printStackTrace();
 			}
 			
 		}

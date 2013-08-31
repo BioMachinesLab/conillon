@@ -52,6 +52,7 @@ public class CompressedObjectOutputStream extends ObjectOutputStream {
 		    try {
 		        bos.close();
 		    } catch (IOException e) {
+		    	e.printStackTrace();
 		    }
 		    
 		    // Get the compressed data
