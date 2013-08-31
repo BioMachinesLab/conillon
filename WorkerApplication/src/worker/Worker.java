@@ -144,7 +144,7 @@ public class Worker {
 			out.println("IO Exception - Connection was closed");
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			out.println("Class Not Foud....");
+			out.println("Class Not Found....");
 			// e.printStackTrace(out);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -220,6 +220,7 @@ public class Worker {
 					}
 					System.out.println("connected " + serverVersion);
 				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
 					startShutdown();
 				}
 
@@ -393,21 +394,18 @@ public class Worker {
 		while (on) {
 			// out.println("Waiting");
 			type = (ConnectionType) socketIn.readObject();
-			// out.println(type);
 			switch (type) {
 			case FEED_WORKER:
-
 				TaskId tid = (TaskId) socketIn.readObject();
 				socketIn.setProblemAndVersion((int) tid.getClientID());
 				try {
 					Task task = (Task) socketIn.readObject();
-					// out.println("Got task!");
 					addTaskcacheList(tid, task);
 				} catch (Exception e) {
 					e.printStackTrace(out);
 				}
-
 				oneTaskAtTime.release();
+				out.println("released");
 				break;
 			case CANCEL_TASK:
 				long clientID = (Long) socketIn.readObject();
@@ -474,18 +472,21 @@ public class Worker {
 			case CLEAR_CLIENT:
 
 				int clientId = (Integer) socketIn.readObject();
-				System.out.println("Client n: " + clientId);
+				out.println("Client n: " + clientId);
 //				codeServerComunicator.clearClientData(clientId);
 
 				break;
 			case KILL_WORKER:
+				out.println("I'm being killed!");
 				startShutdown();
 				break;
-
+			case KICK_WORKER:
+				out.println("I'm being kicked!");
+				disconnect();
 			}
 
 		}
-		System.out.println("Done serving!");
+		out.println("Done serving!");
 	}
 
 	class GetTasks extends Thread {
@@ -501,14 +502,9 @@ public class Worker {
 						socketOut.writeObject(ConnectionType.WORKER_FEED);
 					}
 				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
 				e.printStackTrace(out);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				// e.printStackTrace(out);
 			}
-
 		}
 	}
 
@@ -530,8 +526,7 @@ public class Worker {
 					// wt.start();
 				}
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				// e.printStackTrace(out);
+				e.printStackTrace(out);
 			}
 		}
 
@@ -776,7 +771,6 @@ public class Worker {
 			socketOut.close();
 			socketIn.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

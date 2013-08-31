@@ -18,6 +18,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import worker.Worker;
 import worker.WorkerData;
 
 public class Gui extends JApplet {
@@ -38,8 +39,6 @@ public class Gui extends JApplet {
 	private boolean on = true;
 	
 	private PrintStream out = System.out;
-	
-	
 
 	public void init() {
 		// Set up the text input boxes
@@ -95,28 +94,21 @@ public class Gui extends JApplet {
 			@Override
 			public void run() {
 				String[] args = new String[0];
-				while (on) {
+				while (on && !Worker.shutdown()) {
 					try {
 						GuiUpdater guiUpdater = new GuiUpdater();
 						main = new Main(args, serverAddress, true, true,
 								out, guiUpdater);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					System.out
-							.println("Connection closed! Trying to reconnect.");
+					out.println("Connection closed! Trying to reconnect.");
 					try {
-						Thread.sleep(60000);
+						Thread.sleep(5000);
 					} catch (InterruptedException e) {
 					}
 				}
+				out.println("Shutting down Applet!");
 			}
 		}).start();
 

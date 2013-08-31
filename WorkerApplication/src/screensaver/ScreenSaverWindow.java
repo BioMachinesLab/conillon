@@ -1,30 +1,29 @@
 package screensaver;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.JApplet;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
+import java.awt.Shape;
+import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.util.Random;
+
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
+import javax.swing.event.MouseInputAdapter;
 
 import worker.Worker;
 import worker.WorkerData;
 
-import java.awt.geom.*;
-import java.util.*;
-
-/**
- *
- * @version 0.0.1
- *
- */
 public class ScreenSaverWindow extends JFrame implements Runnable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private Shape shape;
@@ -34,6 +33,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 	private Font fontStatus = new Font("Serif", Font.PLAIN, 15);
 	private Thread proc;
 	private Worker worker;
+	private boolean triedToStop = false;
 	public ScreenSaverWindow(Worker worker){
 		this.worker = worker;
 		try {
@@ -46,18 +46,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 			GraphicsEnvironment.getLocalGraphicsEnvironment()
 			.getDefaultScreenDevice()
 			.setFullScreenWindow(this);
-
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedLookAndFeelException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		init();
@@ -69,11 +58,9 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 		setSize((int) screenSize.getWidth(),(int)screenSize.getHeight());
 		setVisible(true);
 
-
 		shape = new Rectangle2D.Double( -1.0, -1.0, 1.0, 1.0 );
-
-
-
+		addMouseMotionListener(new MyListener());
+		addKeyListener(new MyKeyListener());
 	}  
 
 	public void paint( Graphics g ){
@@ -124,15 +111,40 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 		while( t == proc ){
 			try{
 				Thread.sleep( 2000 );
-
 			}catch( InterruptedException iex ){
 				iex.printStackTrace();
 			}
 			repaint();
 		}
+		System.exit(0);
 	}
 
 	public void stop(){
-		proc = null;
+		if(triedToStop)
+			proc = null;
+		else
+			triedToStop = true;
+	}
+	
+	private class MyKeyListener implements KeyListener {
+
+		@Override
+		public void keyPressed(KeyEvent arg0) {
+		}
+		@Override
+		public void keyReleased(KeyEvent arg0) {
+			stop();
+		}
+		@Override
+		public void keyTyped(KeyEvent arg0) {
+		}
+	}
+	
+	private class MyListener extends MouseInputAdapter {
+
+	    @Override
+	    public void mouseMoved(MouseEvent arg0) {
+	    	stop();
+	    }
 	}
 }

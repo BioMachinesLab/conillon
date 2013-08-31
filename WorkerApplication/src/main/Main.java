@@ -36,7 +36,7 @@ public class Main {
 	private ObjectOutputStream outputStream;
 	private WorkerInformation localhostinfo;
 	private InfrastructureInformation infrastructureInformation;
-	private int numberOfProcessors = 0; // at least one
+	private int numberOfProcessors = 0; // at least one`
 	private int myID;
 	private final static int retryConnect = 5000;
 	private final static boolean screenSaverMode = false;
@@ -50,17 +50,9 @@ public class Main {
 	public void init() {
 		try {
 			execute();
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		out.println("???");
 	}
 
 	public Main() {
@@ -68,9 +60,7 @@ public class Main {
 		this.isRestricted = false;
 		out.println(MAINSERVERADDRESS);
 		worker = new Worker(isRestricted, new GuiClientInfoUpdater());
-
 		out.println(VERSION);
-
 	}
 
 	public Main(String[] args, String server, boolean screesaver,
@@ -80,7 +70,7 @@ public class Main {
 
 		super();
 
-		if (args.length > 0) {
+		if (args.length > 0 && !args[0].startsWith("/")) {
 			MAINSERVERADDRESS = args[0];
 		}
 
@@ -107,31 +97,23 @@ public class Main {
 	public static void main(String[] args) {
 		while (!Worker.shutdown()) {
 			try {
-				new Main(args, null, true, false, System.out,
-						new GuiClientInfoUpdater());
+				new Main(args, null, true, false, System.out, new GuiClientInfoUpdater());
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 				System.out.println("Can't start worker!");
 				System.exit(1);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				System.out.println("ERROR: Lost conection to server.");
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			System.out.println("Connection closed! Trying to reconnect...");
 			try {
 				Thread.sleep(retryConnect);
-			} catch (InterruptedException e) {
-
-			}
+			} catch (InterruptedException e) {}
 		}
-
-		System.out.println("Problems detected. Shutting down.");
+		System.out.println("Shutting down main!");
+//		System.out.println("Problems detected. Shutting down.");
 	}
 
 	private void getLocalHostInfo() throws UnknownHostException {
