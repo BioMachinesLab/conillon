@@ -97,6 +97,11 @@ public class Gui extends JApplet implements ActionListener {
 	private GraphingData idleGraph = new GraphingData();
 	private GraphingData pendingGraph = new GraphingData();
 	private boolean connected = false;
+	
+	private double speed;
+	private int idle;
+	private int cores;
+	private int tasks;
 
 	public void init() {
 
@@ -208,8 +213,8 @@ public class Gui extends JApplet implements ActionListener {
 										.valueOf(workerDataVector.size()));
 	
 								int totalProcessed = 0;
-								double numCores = 0;
-								double numIdle = 0;
+								int numCores = 0;
+								int numIdle = 0;
 								
 								for (WorkerData wd : workerDataVector.values()) {
 									
@@ -233,11 +238,14 @@ public class Gui extends JApplet implements ActionListener {
 	
 								numberOfProcessedTasks.setText(String.valueOf(processedTasks));
 								
-								double speed = ((int) ((totalProcessed - lastProcessed) * 1000000.0 / elapsedTime)) / 1000.0;
+								speed = ((int) ((totalProcessed - lastProcessed) * 1000000.0 / elapsedTime)) / 1000.0;
+								
+								cores = numCores;
+								idle = numIdle;
 								
 								speedGraph.addData(speed);
-								coresGraph.addData(numCores);
-								idleGraph.addData(numIdle);
+								coresGraph.addData((double)numCores);
+								idleGraph.addData((double)numIdle);
 	
 								speedEMA20 = speedEMA20 + alpha
 										* (speed - speedEMA20);
@@ -260,7 +268,7 @@ public class Gui extends JApplet implements ActionListener {
 							} else {
 								workerKeys = null;
 							}
-							double numPending = 0;
+							int numPending = 0;
 	
 							if (clientDataVector.keySet() != null
 									&& !clientDataVector.keySet().isEmpty()) {
@@ -284,8 +292,10 @@ public class Gui extends JApplet implements ActionListener {
 							} else {
 								clientKeys = null;
 							}
+							
+							tasks = numPending;
 	
-							pendingGraph.addData(numPending);
+							pendingGraph.addData((double)numPending);
 	
 							break;
 	
@@ -827,15 +837,39 @@ public class Gui extends JApplet implements ActionListener {
 			case 7:
 				return clientData.getTotalNumberOfTasksDone();
 			case 8:
-				int eat = (int) ((clientData.getTotalNumberOfTasks() - clientData
+				int eta = (int) ((clientData.getTotalNumberOfTasks() - clientData
 						.getTotalNumberOfTasksDone())
 						/ (clientData.getTotalNumberOfTasksDone()
 								/ ((currentServerTime - clientData
 										.getStartTime()) *1.0)));
-				return  new Time(eat- 3600000);
+				return  new Time(eta- 3600000);
 			}
 			return "Unknown";
 		}
+	}
+	
+	public double getSpeed() {
+		return speed;
+	}
+	
+	public int getCores() {
+		return cores;
+	}
+	
+	public int getTasks() {
+		return tasks;
+	}
+	
+	public int getIdle() {
+		return idle;
+	}
+	
+	public Hashtable<Long, WorkerData> getWorkerDataVector() {
+		return workerDataVector;
+	}
+	
+	public Hashtable<Long, ClientData> getClientDataVector() {
+		return clientDataVector;
 	}
 
 	public void setServer(String serverName) {
