@@ -200,7 +200,7 @@ public class ClassCodeServer {
 				classProvider.clientDone(id);
 				System.out.println("Client " + id + " disconected ");
 				// TODO Auto-generated catch block
-				// e.printStackTrace();
+				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				 e.printStackTrace();
@@ -272,7 +272,7 @@ public class ClassCodeServer {
 				}
 
 			} catch (InterruptedException e) {
-				// TODO: handle exception
+				e.printStackTrace();
 			}
 		}
 	}

@@ -57,7 +57,6 @@ public class TaskScheduler {
 			}
 			workingTasks.addFirst(new WorkerTasks(task, id));
 		}
-
 	}
 
 	private TaskDescription getNextTask(WorkerData workerData) {
@@ -159,18 +158,28 @@ public class TaskScheduler {
 	}
 
 	public void removeClientTasks(long clientID) {
+		System.out.println("before client exited: "+pendingTasks.size()+" "+resendTasks.size()+" "+workingTasks.size());
 		synchronized (pendingTasks) {
 			Iterator<ClientTasks> iterator = pendingTasks.iterator();
 			while (iterator.hasNext()) {
 				if (iterator.next().getClientID() == clientID) {
 					iterator.remove();
 					resetPosition();
-					return;
+//					return;
 				}
 			}
 			pendingTasks.remove(clientID);
 		}
-
+		synchronized (workingTasks) {
+			Iterator<WorkerTasks> iterator = workingTasks.iterator();
+			while (iterator.hasNext()) {
+				if (iterator.next().getTask().getClient().getID() == clientID) {
+					iterator.remove();
+//					return;
+				}
+			}
+		}
+		System.out.println("after client exited: "+pendingTasks.size()+" "+resendTasks.size()+" "+workingTasks.size());
 	}
 
 	private void resetPosition() {

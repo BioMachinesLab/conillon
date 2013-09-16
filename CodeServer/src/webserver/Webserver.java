@@ -30,6 +30,7 @@ public class Webserver extends Thread {
 			System.out.println("Web server running on port " + port);
 		} catch (Exception e) {
 			System.out.println(e);
+			e.printStackTrace();
 			return;
 		}
 		while (true) {
@@ -222,6 +223,7 @@ public class Webserver extends Thread {
 					e.printStackTrace();
 					output.writeBytes(construct_http_header(404, 0));
 					output.close();
+					e.printStackTrace();
 				} catch (Exception e2) {
 					e2.printStackTrace();
 				}

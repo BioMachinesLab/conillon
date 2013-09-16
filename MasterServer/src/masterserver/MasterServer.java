@@ -103,14 +103,14 @@ public class MasterServer {
 							}
 						}
 						for (WorkerThread wt : toBeRemoved) {
-							wt.terminateWorker();
-							System.out.println("TERMINATED " + wt.getId());
+							wt.terminateWorker(true);
+							System.out.println("KICKED " + wt.getId());
 						}
 						toBeRemoved.clear();
 						Thread.sleep(1000);
 					}
 				} catch (InterruptedException e) {
-
+					e.printStackTrace();
 				}
 
 			}

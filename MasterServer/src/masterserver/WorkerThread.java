@@ -326,6 +326,7 @@ public class WorkerThread extends Thread implements Observer {
 					}
 				}
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 			System.out.println("Feeder done!");
 		}

@@ -144,7 +144,7 @@ public class CommServer {
 						new HandleConnectionsThread(sslsocket, in, out).start();
 
 					} catch (IOException e) {
-
+						e.printStackTrace();
 					}
 				}
 			} catch (IOException e) {
