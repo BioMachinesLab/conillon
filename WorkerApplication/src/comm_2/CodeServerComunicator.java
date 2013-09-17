@@ -46,10 +46,10 @@ public class CodeServerComunicator {
 				out.writeObject(classRequest);
 				classInfo = (byte[]) in.readObject();
 				if (classInfo == null) {
-	//				System.out.println("Dind not found file or class " + name);
+					System.out.println("Dind not found file or class " + name);
 					throw new ClassNotFoundException(name);
 				}
-				//System.out.println("GOT CLASS" + classInfo.toString());
+				System.out.println("GOT CLASS" + classInfo.toString());
 
 				classes.put(classRequest, classInfo);
 			}

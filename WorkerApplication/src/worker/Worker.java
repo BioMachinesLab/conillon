@@ -362,6 +362,23 @@ public class Worker {
 		return false;
 
 	}
+	
+	private boolean removeTaskcacheList(long clientID) {
+		synchronized (this) {
+			Iterator<CachedTask> iterator = cachedTaskList.iterator();
+			while (iterator.hasNext()) {
+				CachedTask cashedTask = iterator.next();
+				if (cashedTask.getTaskid().getClientID() == clientID) {
+					long taskID = cashedTask.getTaskid().getTaskId();
+					iterator.remove();
+					System.out.println("Removed from cache :" + taskID + ", " + clientID);
+					return true;
+				}
+			}
+		}
+		return false;
+
+	}
 
 	private CachedTask getTask() throws InterruptedException {
 		CachedTask cachedTask = null;
@@ -392,7 +409,6 @@ public class Worker {
 
 		ConnectionType type;
 		while (on) {
-			// out.println("Waiting");
 			type = (ConnectionType) socketIn.readObject();
 			switch (type) {
 			case FEED_WORKER:
@@ -410,23 +426,26 @@ public class Worker {
 			case CANCEL_TASK:
 				long clientID = (Long) socketIn.readObject();
 				long taskID = (Long) socketIn.readObject();
-				out.println("Tenta matar:" + clientID + taskID);
+				out.println("Tenta matar:" + clientID +" "+ taskID);
 				if (!removeTaskcacheList(clientID, taskID)) {
 					synchronized (currentTask) {
 
 						Set<Entry<TaskId, TaskThread>> set = currentTask
 								.entrySet();
+						System.out.println("I have "+set.size()+" tasks in my queue");
 						Iterator<Entry<TaskId, TaskThread>> i = set.iterator();
 						while (i.hasNext()) {
 							Map.Entry me = i.next();
 							TaskId tidlocal = (TaskId) me.getKey();
-							out.println(tidlocal.getTaskId());
+							out.println(tidlocal.getTaskId() +" == "+taskID+" && "+tidlocal.getClientID() +" == "+ clientID);
 							if (tidlocal.getTaskId() == taskID
 									&& tidlocal.getClientID() == clientID) {
 								Thread th = (Thread) me.getValue();
 								// out.println(th.getState());
 
 								th.stop();
+								
+								i.remove();
 								// try {
 								// th.join();
 								// } catch (InterruptedException e) {
@@ -451,12 +470,13 @@ public class Worker {
 
 							}
 						}
+						System.out.println("Now, I have "+set.size()+" tasks in my queue");
 
 					}
 				} else {
 					numberOfAllowedCache.release();
 				}
-				out.println("matou: " + clientID + taskID );
+				out.println("matou: " + clientID +" "+ taskID );
 				break;
 			case WORKER_CANCEL_CLIENT_TASK:
 				break;
@@ -472,7 +492,57 @@ public class Worker {
 			case CLEAR_CLIENT:
 
 				int clientId = (Integer) socketIn.readObject();
-				out.println("Client n: " + clientId);
+				
+				out.println("Tenta matar tudo do client:" + clientId);
+				if (!removeTaskcacheList(clientId)) {
+					synchronized (currentTask) {
+
+						Set<Entry<TaskId, TaskThread>> set = currentTask
+								.entrySet();
+						System.out.println("I have "+set.size()+" tasks in my queue");
+						Iterator<Entry<TaskId, TaskThread>> i = set.iterator();
+						while (i.hasNext()) {
+							Map.Entry me = i.next();
+							TaskId tidlocal = (TaskId) me.getKey();
+							out.println(tidlocal.getClientID() +" == "+ clientId);
+							if (tidlocal.getClientID() == clientId) {
+								Thread th = (Thread) me.getValue();
+								// out.println(th.getState());
+
+								th.stop();
+								
+								i.remove();
+								// try {
+								// th.join();
+								// } catch (InterruptedException e) {
+								// e.printStackTrace();
+								// }
+								// //i.remove();
+								// out.println(th.getState());
+								//
+								// // freeTask();
+								// out.println("Matou Thread" + th.getId());
+
+								
+//								synchronized (socketOut) {
+//									socketOut
+//											.writeObject(ConnectionType.WORKER_CANCELED_TASK_OK);
+//									socketOut.writeObject(clientID);
+//									socketOut.writeObject(taskID);
+//									out.println("KILLED:" + clientID + ","
+//											+ taskID);
+//								}
+
+							}
+						}
+						System.out.println("Now, I have "+set.size()+" tasks in my queue");
+
+					}
+				} else {
+					numberOfAllowedCache.release();
+				}
+				
+				
 //				codeServerComunicator.clearClientData(clientId);
 
 				break;
@@ -575,11 +645,13 @@ public class Worker {
 		}
 
 		public void run() {
+			System.out.println("Running Thread!");
 			boolean flag = false;
 			long elapsedTime = 0L;
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			task.setFileProvider(new RemoteFileProvider((int) tid.getClientID()));
 			TaskThread thread = new TaskThread(task, tid);
+			System.out.println("Let's go");
 			synchronized (currentTask) {
 				currentTask.put(tid, thread);
 			}
@@ -595,12 +667,13 @@ public class Worker {
 					long id = Thread.currentThread().getId();
 					long startTime = System.currentTimeMillis();
 					Result result;
-
 					thread.start();
 
 					try {
+						System.out.println("Waiting for task to finish...");
 						thread.join();
 					} catch (InterruptedException e) {
+						e.printStackTrace();
 						// TODO Auto-generated catch block
 
 						// e.printStackTrace(out);
@@ -631,6 +704,7 @@ public class Worker {
 
 						Date date = new Date();
 						String endTime = dateFormat.format(date);
+						System.out.println("Finalizing....");
 						synchronized (workerData) {
 							workerData.setNumberOfTasksProcessed();
 							workerData.setTotalTimeSpentFarming(elapsedTime);
@@ -653,17 +727,19 @@ public class Worker {
 								}
 							}
 						}
+						System.out.println("Everything OK!");
 					}else {
 						System.out.println("KILLED not ended...");
 					}
 					synchronized (currentTask) {
+						System.out.println("Removing task");
 						currentTask.remove(tid);
 						freeTask();
+						System.out.println("Task removed");
 					}
 
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace(out);
 			}
 			long end = System.currentTimeMillis();
