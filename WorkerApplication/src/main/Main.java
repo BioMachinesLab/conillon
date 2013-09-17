@@ -56,6 +56,7 @@ public class Main implements WebRunner {
 	}
 
 	public Main() {
+		super();
 		this.isRestricted = false;
 		this.out = System.out;
 		out.println(MAINSERVERADDRESS);
@@ -70,6 +71,7 @@ public class Main implements WebRunner {
 	}
 	
 	public Main(boolean screensaver) {
+		super();
 		screenSaverMode = screensaver;
 		this.isRestricted = false;
 		this.out = System.out;
@@ -82,6 +84,10 @@ public class Main implements WebRunner {
 			sw.start();
 		}
 		out.println(VERSION);
+	}
+	
+	public Worker getWorker() {
+		return worker;
 	}
 
 	public Main(String[] args, String server, boolean screesaver,

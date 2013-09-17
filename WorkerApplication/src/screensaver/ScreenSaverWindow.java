@@ -34,6 +34,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 	private Thread proc;
 	private Worker worker;
 	private boolean triedToStop = false;
+	private long nTasks = 0;
 	public ScreenSaverWindow(Worker worker){
 		this.worker = worker;
 		try {
@@ -80,7 +81,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 			WorkerData wd = worker.getWorkerData();
 			if(wd!=null){
 			g2d.setFont(fontStatus);
-			g2d.drawString("Number of Tasks Processed: "+wd.getNumberOfTasksProcessed(), width/2-200,80);}
+			g2d.drawString("Number of Tasks Processed: "+(nTasks+wd.getNumberOfTasksProcessed()), width/2-200,80);}
 			}
 			
 
@@ -146,5 +147,10 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 	    public void mouseMoved(MouseEvent arg0) {
 	    	stop();
 	    }
+	}
+	
+	public void setWorker(Worker worker) {
+		nTasks+= this.worker.getWorkerData().getNumberOfTasksProcessed();
+		this.worker = worker;
 	}
 }
