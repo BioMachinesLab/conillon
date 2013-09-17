@@ -10,16 +10,16 @@ import java.net.UnknownHostException;
 import javax.swing.JApplet;
 
 import screensaver.ScreenSaverWindow;
+import web.WebRunner;
 import worker.Worker;
 import worker.WorkerData;
 import worker.WorkerInformation;
-
 import comm.ConnectionType;
 import comm.InfrastructureInformation;
 import comm_2.Comm;
 import comm_2.Streams;
 
-public class Main {
+public class Main implements WebRunner {
 
 	// ********** VERSION ******************
 	private final static String VERSION = "Version "
@@ -56,10 +56,16 @@ public class Main {
 	}
 
 	public Main() {
-		this.out = System.out;
 		this.isRestricted = false;
+		this.out = System.out;
 		out.println(MAINSERVERADDRESS);
 		worker = new Worker(isRestricted, new GuiClientInfoUpdater());
+
+
+		if (screenSaverMode) {
+			sw = new ScreenSaverWindow(worker);
+			sw.start();
+		}
 		out.println(VERSION);
 	}
 
@@ -113,7 +119,7 @@ public class Main {
 			} catch (InterruptedException e) {}
 		}
 		System.out.println("Shutting down main!");
-//		System.out.println("Problems detected. Shutting down.");
+		System.out.println("Problems detected. Shutting down.");
 	}
 
 	private void getLocalHostInfo() throws UnknownHostException {
@@ -185,4 +191,7 @@ public class Main {
 		}
 	}
 
+	@Override
+	public void setAttribute(String a) {
+	}
 }
