@@ -2,18 +2,22 @@ package screensaver;
 
 import main.Main;
 import web.WebRunner;
+import worker.Worker;
 
 public class MainScreensaver implements WebRunner {
 	
-	private Main main;
 	
-	public MainScreensaver() {
-		main = new Main(true);
-	}
 
 	@Override
 	public void init() {
-		main.init();
+		while (!Worker.shutdown()) {
+			Main main = new Main(true);
+			main.init();
+			System.out.println("Dead");
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {}
+		}
 	}
 
 	@Override
