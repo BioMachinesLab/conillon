@@ -39,7 +39,7 @@ public class Main implements WebRunner {
 	private int numberOfProcessors = 0; // at least one`
 	private int myID;
 	private final static int retryConnect = 5000;
-	private final static boolean screenSaverMode = false;
+	private boolean screenSaverMode = false;
 	private ScreenSaverWindow sw;
 	private Worker worker;
 
@@ -56,6 +56,21 @@ public class Main implements WebRunner {
 	}
 
 	public Main() {
+		this.isRestricted = false;
+		this.out = System.out;
+		out.println(MAINSERVERADDRESS);
+		worker = new Worker(isRestricted, new GuiClientInfoUpdater());
+
+
+		if (screenSaverMode) {
+			sw = new ScreenSaverWindow(worker);
+			sw.start();
+		}
+		out.println(VERSION);
+	}
+	
+	public Main(boolean screensaver) {
+		screenSaverMode = screensaver;
 		this.isRestricted = false;
 		this.out = System.out;
 		out.println(MAINSERVERADDRESS);
