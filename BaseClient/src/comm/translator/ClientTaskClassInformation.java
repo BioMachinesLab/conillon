@@ -2,6 +2,7 @@ package comm.translator;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Random;
 
 public class ClientTaskClassInformation implements Serializable {
 
@@ -9,6 +10,7 @@ public class ClientTaskClassInformation implements Serializable {
 	private String topClassName;
 	private String packageName;
 	private HashMap<String, Long> classHashs;
+	private int randomNumber = new Random().nextInt(10000);
 
 	public ClientTaskClassInformation(long clientHash,
 			HashMap<String, Long> classHashs) {
@@ -27,7 +29,7 @@ public class ClientTaskClassInformation implements Serializable {
 	}
 
 	public long getClientHash() {
-		return clientHash;
+		return clientHash+randomNumber;
 	}
 
 	public String getTopClassName() {

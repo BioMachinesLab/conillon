@@ -8,13 +8,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.LinkedList;
-
 import result.ClassNameRequest;
 import result.ClassRequest;
 import result.Request;
 import result.Result;
 import tasks.Task;
-
 import comm.ClassNameManager;
 import comm.ClientPriority;
 import comm.Comm;
@@ -72,19 +70,16 @@ public class Client {
 		} else {
 			this.masterPort = masterPort;
 		}
-		;
 
 		if (codeServerPort == 0) {
 			this.codeServerPort = 10000;
 		} else {
 			this.codeServerPort = codeServerPort;
 		}
-		;
 
 		connectCodeServer();
 		connectMaster();
 		// execute();
-
 	}
 
 	public int getMyID() {
@@ -128,18 +123,15 @@ public class Client {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			try {
-				in.close();
-				out.close();
+				inputStream.close();
+				outputStream.close();
 				socket.close();
 				return;
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
 		}
 
 	}
@@ -149,11 +141,9 @@ public class Client {
 			try {
 				outputStream.writeObject(message);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 	private void connectMaster() {
@@ -186,7 +176,6 @@ public class Client {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			try {
 				in.close();
@@ -194,12 +183,9 @@ public class Client {
 				socket.close();
 				return;
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
 		}
-
 	}
 
 	public void setTotalNumberOfTasks(int totalNumberOfTasks) {
@@ -220,7 +206,6 @@ public class Client {
 				out.writeObject(desc);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -239,24 +224,12 @@ public class Client {
 				try {
 					Object tt = translator.duplicate(task);
 					out.writeObject(tt);
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (InstantiationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
 				// return getResult();
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		// return null;
@@ -271,59 +244,44 @@ public class Client {
 			try {
 				out.writeObject(translator.duplicate(task));
 				out.reset();
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Exception e) {
 			}
 			return getResult();
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return null;
-
 	}
 
 	public void cancelAllTasks() {
 		try {
 			System.out.println("Canceling all Tasks...");
 			out.writeObject(ConnectionType.CLIENT_CANCEL_ALL_TASKS);
-
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	public void startWork() {
 		try {
 			out.writeObject(ConnectionType.START_WORK);
-
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	public void disconnect() {
 		try {
+			//master
 			out.writeObject(ConnectionType.CLIENT_DISCONNECT);
-			out.reset();
+			out.close();
+			in.close();
+			
+			//code
+			outputStream.close();
 			inputStream.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -335,7 +293,6 @@ public class Client {
 				try {
 					results.wait();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -354,19 +311,7 @@ public class Client {
 		try {
 			Object aux = in.readObject();
 			result = (Result) translator.revert(aux);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NegativeArraySizeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return result;
@@ -384,7 +329,7 @@ public class Client {
 					}
 				}
 			} catch (IOException e) {
-
+				e.printStackTrace();
 			}
 		}
 	}
@@ -418,10 +363,7 @@ public class Client {
 					}
 
 				}
-			} catch (IOException e) {
-
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -459,19 +401,11 @@ public class Client {
 						out.writeObject(request);
 						out.writeObject(classData);
 					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
-
 	}
 
 	// Returns the contents of the file in a byte array.
@@ -511,5 +445,4 @@ public class Client {
 		is.close();
 		return bytes;
 	}
-
 }
