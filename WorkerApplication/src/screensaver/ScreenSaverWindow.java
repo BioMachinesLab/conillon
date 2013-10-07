@@ -75,16 +75,16 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 		g2d.fillRect( 0, 0, width, height );
 		g2d.setColor( Color.WHITE );
 		g2d.setFont(fontTitle);
-		g2d.drawString("Conillon ScreenSaver", width/2-200,40);		
+//		g2d.drawString("Conillon ScreenSaver", width/2-200,40);		
 		
 		if(worker!=null){
 			WorkerData wd = worker.getWorkerData();
 			if(wd!=null){
 			g2d.setFont(fontStatus);
-			g2d.drawString("Number of Tasks Processed: "+(nTasks+wd.getNumberOfTasksProcessed()), width/2-200,80);}
+			g2d.drawString("Number of Tasks Processed: "+(nTasks+wd.getNumberOfTasksProcessed()), (int)(width*rand.nextDouble()),(int)(height*rand.nextDouble()));}
 			}
 			
-
+/*
 		g2d.setColor( Color.BLACK );
 		for( int x = 0;x< 800; x++ ){
 			g2d.setTransform( identify );
@@ -93,7 +93,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 			g2d.scale( 60 * rand.nextDouble(), 60 * rand.nextDouble() );
 			g2d.setColor( new Color( rand.nextInt() ) );
 			g2d.fill( shape );
-		}
+		}*/
 	}
 
 	public void update( Graphics g ){

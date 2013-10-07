@@ -145,7 +145,7 @@ public class Worker {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
 			out.println("Class Not Found....");
-			// e.printStackTrace(out);
+			 e.printStackTrace(out);
 		} catch (Exception e) {
 			e.printStackTrace();
 			out.println(e);
@@ -187,7 +187,6 @@ public class Worker {
 			} else {
 				out.println("Comm has problems!!");
 			}
-
 			Thread.sleep(retryConnect);
 		}
 
@@ -221,6 +220,7 @@ public class Worker {
 					System.out.println("connected " + serverVersion);
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
+					System.out.println("killing because of ClassNotFoundException on connectMasterServer");
 					startShutdown();
 				}
 
@@ -394,7 +394,7 @@ public class Worker {
 		return cachedTask;
 	}
 
-	private void serve() throws IOException, ClassNotFoundException {
+	private void serve() throws Exception {
 		keepRunning = true;
 		socketOut.reset();
 		out.println("Sending worker data");
@@ -419,6 +419,8 @@ public class Worker {
 					addTaskcacheList(tid, task);
 				} catch (Exception e) {
 					e.printStackTrace(out);
+					System.out.println("Had a problem with a class, let's start from scratch");
+					disconnect();
 				}
 				oneTaskAtTime.release();
 				out.println("released");
@@ -548,6 +550,7 @@ public class Worker {
 				break;
 			case KILL_WORKER:
 				out.println("I'm being killed!");
+				System.out.println("type: "+type);
 				startShutdown();
 				break;
 			case KICK_WORKER:
@@ -772,27 +775,31 @@ public class Worker {
 
 			public void run() {
 				try {
-					long startCpuTime = threadBean.getCurrentThreadCpuTime();
-					task.run();
-					long cpuTime = (threadBean.getCurrentThreadCpuTime() - startCpuTime) / 1000000L;
-					out.println("Done task number (" + tid.getClientID() + ", "
-							+ tid.getTaskId() + ") CPU Time:" + cpuTime
-							+ "(ms)");
-					// throw new IllegalArgumentException(
-					// "ERRO- em modo debug - tirar esta mensagem");
-
-				} catch (RuntimeException e) {
-					e.printStackTrace(out);
-					exception = e;
-					// this.interrupt();
-				} catch(Exception e){
+					try {
+						long startCpuTime = threadBean.getCurrentThreadCpuTime();
+						task.run();
+						long cpuTime = (threadBean.getCurrentThreadCpuTime() - startCpuTime) / 1000000L;
+						out.println("Done task number (" + tid.getClientID() + ", "
+								+ tid.getTaskId() + ") CPU Time:" + cpuTime
+								+ "(ms)");
+						// throw new IllegalArgumentException(
+						// "ERRO- em modo debug - tirar esta mensagem");
+	
+					} catch (RuntimeException e) {
+						e.printStackTrace(out);
+						exception = e;
+						// this.interrupt();
+					} catch(Exception e){
+						e.printStackTrace();
+					}
+					if (getException() != null) {
+						result = new Result();
+						result.setException(getException());
+					} else {
+						result = task.getResult();
+					}
+				} catch(Exception e) {
 					e.printStackTrace();
-				}
-				if (getException() != null) {
-					result = new Result();
-					result.setException(getException());
-				} else {
-					result = task.getResult();
 				}
 
 				done = true;
@@ -835,6 +842,7 @@ public class Worker {
 
 	private void startShutdown() {
 		shutdown = true;
+		System.out.println("I'm REALLY being killed!");
 		disconnect();
 	}
 
@@ -864,6 +872,7 @@ public class Worker {
 		}
 
 		System.out.println("ENDED...");
+		System.gc();
 	}
 
 	private class Restarter extends Thread {

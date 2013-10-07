@@ -96,7 +96,7 @@ public class Main implements WebRunner {
 			ClassNotFoundException, InterruptedException {
 
 		super();
-
+		System.out.println("Starting from scratch");
 		if (args.length > 0 && !args[0].startsWith("/")) {
 			MAINSERVERADDRESS = args[0];
 		}
@@ -137,7 +137,7 @@ public class Main implements WebRunner {
 			System.out.println("Connection closed! Trying to reconnect...");
 			try {
 				Thread.sleep(retryConnect);
-			} catch (InterruptedException e) {}
+			} catch (Exception e) {}
 		}
 		System.out.println("Shutting down main!");
 		System.out.println("Problems detected. Shutting down.");
