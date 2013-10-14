@@ -30,7 +30,7 @@ public class DataExport extends Thread {
 			Thread.sleep(10*1000);
 		} catch(Exception e) {}
 		
-		
+		int times = 0;
 		
 		while(true) {
 			try {
@@ -53,6 +53,9 @@ public class DataExport extends Thread {
 
 				Hashtable<Long, ClientData> clientDataVector = gui.getClientDataVector();
 				Hashtable<Long, WorkerData> workerDataVector = gui.getWorkerDataVector();
+				
+				if(times++ % 6 != 0)
+					query = "";
 				
 				query+= "&clients={\"clients\": [";
 				//id`,`ip`,`desc`,`time`,`speed`,`task_counter`,`tasks_done`,`eta`
@@ -123,7 +126,7 @@ public class DataExport extends Thread {
 				} finally {
 				     if (output != null) try { output.close(); } catch (IOException logOrIgnore) {logOrIgnore.printStackTrace();}
 				}				
-				sleep(60*1000);
+				sleep(10*1000);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
