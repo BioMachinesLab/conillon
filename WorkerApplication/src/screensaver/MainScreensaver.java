@@ -15,24 +15,32 @@ public class MainScreensaver implements WebRunner {
 		
 		ScreenSaverWindow sw = null;
 		
-		while (!Worker.shutdown()) {
-			try{
-				Main main = new Main();
-				
-				if(sw == null){
-					sw = new ScreenSaverWindow(main.getWorker());
-					sw.start();
-				} else
-					sw.setWorker(main.getWorker());
-				
-				main.init();
-				System.out.println("Dead");
-			}catch(Exception e){
-				e.printStackTrace();
+		while(true) {
+			Worker.shutdown = false;
+			while (!Worker.shutdown()) {
+				try{
+					Main main = new Main();
+					
+					if(sw == null){
+						sw = new ScreenSaverWindow(main.getWorker());
+						sw.start();
+					} else
+						sw.setWorker(main.getWorker());
+					
+					main.init();
+					System.out.println("Dead");
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				try {
+					Thread.sleep(5*1000);
+				} catch (InterruptedException e) {}
 			}
+			
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(1000*60);
 			} catch (InterruptedException e) {}
+			
 		}
 	}
 

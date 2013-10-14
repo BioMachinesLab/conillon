@@ -85,7 +85,7 @@ public class Worker {
 
 	private GuiClientInfoUpdater guiUpdater;
 	private boolean on = true;
-	private static boolean shutdown = false;
+	public static boolean shutdown = false;
 
 	private Restarter restarter;
 	private GetTasks taskGetter;
@@ -556,6 +556,7 @@ public class Worker {
 			case KICK_WORKER:
 				out.println("I'm being kicked!");
 				disconnect();
+				break;
 			}
 
 		}

@@ -44,9 +44,9 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 			setResizable(false);
 			setTitle("Conillon S.S.");
 			validate();
-			GraphicsEnvironment.getLocalGraphicsEnvironment()
-			.getDefaultScreenDevice()
-			.setFullScreenWindow(this);
+//			GraphicsEnvironment.getLocalGraphicsEnvironment()
+//			.getDefaultScreenDevice()
+//			.setFullScreenWindow(this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -150,7 +150,8 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 	}
 	
 	public void setWorker(Worker worker) {
-		nTasks+= this.worker.getWorkerData().getNumberOfTasksProcessed();
+		if(this.worker != null && this.worker.getWorkerData() != null)
+			nTasks+= this.worker.getWorkerData().getNumberOfTasksProcessed();
 		this.worker = worker;
 	}
 }
