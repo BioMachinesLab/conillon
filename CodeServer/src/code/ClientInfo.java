@@ -86,14 +86,12 @@ public class ClientInfo {
 	public void requestClass(ClassRequest request) {
 		try {
 			synchronized (out) {
+				System.out.println("__requesting "+request.getName()+" "+request.getId());
 				out.writeObject(request);
+				System.out.println("__received "+request.getName()+" "+request.getId());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		
 	}
-
 }

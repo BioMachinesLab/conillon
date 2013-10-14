@@ -41,8 +41,10 @@ public class ClassProvider {
 		} else {
 			// System.out.println(request);
 			while (neededClass == null) {
+				System.out.println("Class is null, need to ask someone! "+request.getId()+" "+request.getName());
 				if (!requestedClasses.contains(request)) {
 					requestedClasses.add(request);
+					System.out.println("Added the class to the list");
 					ClientInfo clientInfo = null;
 					if (request.getName().startsWith("__")) {
 						long codeBase = Long.parseLong(request.getName()
@@ -53,11 +55,15 @@ public class ClassProvider {
 							System.out
 									.println("Error: no provider for codebase: "
 											+ codeBase);
+							requestedClasses.remove(request);
+							return null;
 						}
 						clientInfo = classProvidersForCodeBase.getFirst();
+						System.out.println("Found a provider: "+clientInfo.hashCode()+" "+codeBase);
 					} else {
 						clientInfo = classSolver.getClientInfo(request.getId());
 					}
+					System.out.println("Requesting class "+request.getName()+" "+request.getId());
 					clientInfo.requestClass(request);
 				}
 				System.out.println("wait" + Thread.currentThread());
