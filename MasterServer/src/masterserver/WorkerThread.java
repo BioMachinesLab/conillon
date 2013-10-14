@@ -241,7 +241,7 @@ public class WorkerThread extends Thread implements Observer {
 	}
 	
 	public void terminateWorker() {
-		terminateWorker(false);
+		terminateWorker(true);
 	}
 
 	public void terminateWorker(boolean kick) {

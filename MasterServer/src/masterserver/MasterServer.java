@@ -103,7 +103,7 @@ public class MasterServer {
 							}
 						}
 						for (WorkerThread wt : toBeRemoved) {
-							wt.terminateWorker(true);
+							wt.terminateWorker();
 							System.out.println("KICKED " + wt.getId());
 						}
 						toBeRemoved.clear();
@@ -152,6 +152,7 @@ public class MasterServer {
 	}
 
 	void removeClient(long id) {
+		//HERE
 		synchronized (clientThread) {
 			if (clientThread.containsKey(id))
 				clientThread.remove(id);
@@ -449,7 +450,7 @@ public class MasterServer {
 				System.out.println("KILL BAD WORKER "
 						+ task.getTaskDescription().getLastWorkerId() + list
 						+ " taskID= " + task.getTid());
-				killWorker(task.getTaskDescription().getLastWorkerId());
+				kickWorker(task.getTaskDescription().getLastWorkerId());
 			}
 			taskObserver.canceledSingleTask(task);
 			// addCPUTime(task.getTaskDescription().getTimeToComplete());
@@ -593,7 +594,7 @@ public class MasterServer {
 		synchronized (workerThread) {
 			if (workerThread.containsKey(idWorker)) {
 				WorkerThread wt = workerThread.get(idWorker);
-				wt.terminateWorker();
+				wt.terminateWorker(false);
 				workerThread.remove(wt);
 			}
 		}
@@ -602,7 +603,7 @@ public class MasterServer {
 		synchronized (workerThread) {
 			if (workerThread.containsKey(idWorker)) {
 				WorkerThread wt = workerThread.get(idWorker);
-				wt.terminateWorker(true);
+				wt.terminateWorker();
 				workerThread.remove(wt);
 			}
 		}
