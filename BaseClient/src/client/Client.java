@@ -241,14 +241,10 @@ public class Client {
 												// startWork();
 		try {
 			out.writeObject(ConnectionType.CLIENT_NEW_TASK_WAIT);
-			try {
-				out.writeObject(translator.duplicate(task));
-				out.reset();
-			} catch (Exception e) {
-			}
+			out.writeObject(translator.duplicate(task));
+			out.reset();
 			return getResult();
-
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -306,14 +302,10 @@ public class Client {
 		}
 	}
 
-	private Result getResult() throws IOException {
+	private Result getResult() throws Exception {
 		Result result = null;
-		try {
-			Object aux = in.readObject();
-			result = (Result) translator.revert(aux);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		Object aux = in.readObject();
+		result = (Result) translator.revert(aux);
 		return result;
 	}
 
@@ -328,7 +320,7 @@ public class Client {
 						results.notify();
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
