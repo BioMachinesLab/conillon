@@ -823,8 +823,11 @@ public class Worker {
 			try {
 				file = codeServerComunicator.requestClass(id, name);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (AbortWorkerException e ) {
+				e.printStackTrace();
+				System.out.println("Aborting worker! Kicking myself off");
+				disconnect();
 			}
 			if (file == null)
 				return null;

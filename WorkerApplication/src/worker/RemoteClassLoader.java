@@ -1,11 +1,6 @@
 package worker;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import result.ClassRequest;
-
 import comm_2.CodeServerComunicator;
 
 public class RemoteClassLoader extends ClassLoader {

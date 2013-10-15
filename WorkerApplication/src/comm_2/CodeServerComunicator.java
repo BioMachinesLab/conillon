@@ -7,6 +7,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 
 import result.ClassRequest;
+import worker.AbortWorkerException;
 
 public class CodeServerComunicator {
 	private ObjectInputStream in;
@@ -36,23 +37,28 @@ public class CodeServerComunicator {
 			ClassNotFoundException {
 		ClassRequest classRequest = new ClassRequest(id, name);
 		byte[] classInfo = null;
+		
+		try {
 
-		if (classes.containsKey(classRequest)) {
-			classInfo = classes.get(classRequest);
-		} else {
-
-			synchronized (this) {
-				System.out.println("Need " + name);
-				out.writeObject(classRequest);
-				classInfo = (byte[]) in.readObject();
-				if (classInfo == null) {
-					System.out.println("Dind not found file or class " + name);
-					throw new ClassNotFoundException(name);
+			if (classes.containsKey(classRequest)) {
+				classInfo = classes.get(classRequest);
+			} else {
+	
+				synchronized (this) {
+					System.out.println("Need " + name);
+					out.writeObject(classRequest);
+					classInfo = (byte[]) in.readObject();
+					if (classInfo == null) {
+						System.out.println("Dind not found file or class " + name);
+						throw new ClassNotFoundException(name);
+					}
+					System.out.println("GOT CLASS" + classInfo.toString());
+	
+					classes.put(classRequest, classInfo);
 				}
-				System.out.println("GOT CLASS" + classInfo.toString());
-
-				classes.put(classRequest, classInfo);
 			}
+		}catch(ClassCastException e) {
+			throw new AbortWorkerException();
 		}
 		return classInfo;
 	}
