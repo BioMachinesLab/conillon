@@ -105,9 +105,7 @@ public class ClassCodeServer {
 								classProvider.addProvider(new ClientInfo(id, out, in, codeBase));
 								new ProviderThread(id, out, in, classProvider)
 										.start();
-								System.out
-										.println("New class solver connection "
-												+ socket);
+								System.out.println("New class solver connection "+ socket);
 
 								break;
 							case CLASS_REQUESTER:
@@ -121,8 +119,7 @@ public class ClassCodeServer {
 								new AppletRequesterThread(socket, in, out)
 										.start();
 								System.out
-										.println("New Japplet class requester connection "
-												+ socket);
+										.println("New Japplet class requester connection " + socket);
 								break;
 
 							default:
@@ -133,7 +130,6 @@ public class ClassCodeServer {
 
 						e.printStackTrace();
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -235,7 +231,12 @@ public class ClassCodeServer {
 								.readObject();
 						byte[] neededClass = null;
 						System.out.println("Worker asked for class: " + neededClassRequest.getName());
-						neededClass = getClassBy(neededClassRequest);
+						
+						if(neededClassRequest.getName().startsWith("__")) {
+							neededClass = getClassBy(neededClassRequest);
+						}else {
+							System.out.println("Stupid worker is asking for something wrong!!!! "+neededClassRequest.getName());
+						}
 
 						out.writeObject(neededClass);
 						// out.writeObject(newClass);
@@ -248,12 +249,10 @@ public class ClassCodeServer {
 						socket.close();
 						return;
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 
 					try {
@@ -262,12 +261,10 @@ public class ClassCodeServer {
 						socket.close();
 						return;
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 
 				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
