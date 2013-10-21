@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Hashtable;
-import java.util.Iterator;
-
 import result.ClassRequest;
-import worker.AbortWorkerException;
 
 public class CodeServerComunicator {
 	private ObjectInputStream in;
@@ -39,7 +36,6 @@ public class CodeServerComunicator {
 		byte[] classInfo = null;
 		
 		try {
-
 			if (classes.containsKey(classRequest)) {
 				classInfo = classes.get(classRequest);
 			} else {
@@ -49,7 +45,7 @@ public class CodeServerComunicator {
 					out.writeObject(classRequest);
 					classInfo = (byte[]) in.readObject();
 					if (classInfo == null) {
-						System.out.println("Dind not found file or class " + name);
+						System.out.println("Did not found file or class " + name);
 						throw new ClassNotFoundException(name);
 					}
 					System.out.println("GOT CLASS" + classInfo.toString());
@@ -58,7 +54,8 @@ public class CodeServerComunicator {
 				}
 			}
 		}catch(ClassCastException e) {
-			throw new AbortWorkerException();
+			e.printStackTrace();
+//			throw new AbortWorkerException();
 		}
 		return classInfo;
 	}
@@ -69,10 +66,10 @@ public class CodeServerComunicator {
 
 	public void disconect() {
 		try {
+			System.out.println("DISCONNECTING CODE SERVER COMM!");
 			in.close();
 			out.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
