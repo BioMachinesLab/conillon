@@ -232,7 +232,7 @@ public class ClassCodeServer {
 						byte[] neededClass = null;
 						System.out.println("Worker asked for class: " + neededClassRequest.getName());
 						
-						if(neededClassRequest.getName().startsWith("__")) {
+						if(neededClassRequest.getName().startsWith("__") || neededClassRequest.getName().contains("/")) {
 							neededClass = getClassBy(neededClassRequest);
 						}else {
 							System.out.println("Stupid worker is asking for something wrong!!!! "+neededClassRequest.getName());
