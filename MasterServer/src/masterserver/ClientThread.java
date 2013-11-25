@@ -107,7 +107,7 @@ class ClientThread extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			// e.printStackTrace();
+			 e.printStackTrace();
 			System.out.println("CLIENT: DISCONNECTED OR KILLED:" + this.myID);
 			//e.printStackTrace();
 			disconnect();
