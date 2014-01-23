@@ -790,7 +790,7 @@ public class Worker {
 						e.printStackTrace(out);
 						exception = e;
 						// this.interrupt();
-					} catch(Exception e){
+					} catch(Throwable e){
 						e.printStackTrace();
 					}
 					if (getException() != null) {
