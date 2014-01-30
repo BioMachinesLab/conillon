@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.math.BigInteger;
@@ -354,7 +355,7 @@ public class Worker {
 				if (cashedTask.getTaskid().getClientID() == clientID
 						&& cashedTask.getTaskid().getTaskId() == taskID) {
 					iterator.remove();
-					System.out.println("Removed from cache :" + taskID + ", " + clientID);
+//					System.out.println("Removed from cache :" + taskID + ", " + clientID);
 					return true;
 				}
 			}
@@ -371,7 +372,7 @@ public class Worker {
 				if (cashedTask.getTaskid().getClientID() == clientID) {
 					long taskID = cashedTask.getTaskid().getTaskId();
 					iterator.remove();
-					System.out.println("Removed from cache :" + taskID + ", " + clientID);
+//					System.out.println("Removed from cache :" + taskID + ", " + clientID);
 					return true;
 				}
 			}
@@ -397,11 +398,11 @@ public class Worker {
 	private void serve() throws Exception {
 		keepRunning = true;
 		socketOut.reset();
-		out.println("Sending worker data");
+//		out.println("Sending worker data");
 		socketOut.writeObject(workerData);
-		out.println("Waiting for worker data from server");
+//		out.println("Waiting for worker data from server");
 		workerData = (WorkerData) socketIn.readObject();
-		out.println("Got worker data from server");
+//		out.println("Got worker data from server");
 		taskGetter = new GetTasks();
 		taskGetter.start();
 		taskFeeder = new FeedWorker();
@@ -423,23 +424,23 @@ public class Worker {
 					disconnect();
 				}
 				oneTaskAtTime.release();
-				out.println("released");
+//				out.println("released");
 				break;
 			case CANCEL_TASK:
 				long clientID = (Long) socketIn.readObject();
 				long taskID = (Long) socketIn.readObject();
-				out.println("Tenta matar:" + clientID +" "+ taskID);
+//				out.println("Tenta matar:" + clientID +" "+ taskID);
 				if (!removeTaskcacheList(clientID, taskID)) {
 					synchronized (currentTask) {
 
 						Set<Entry<TaskId, TaskThread>> set = currentTask
 								.entrySet();
-						System.out.println("I have "+set.size()+" tasks in my queue");
+//						System.out.println("I have "+set.size()+" tasks in my queue");
 						Iterator<Entry<TaskId, TaskThread>> i = set.iterator();
 						while (i.hasNext()) {
 							Map.Entry me = i.next();
 							TaskId tidlocal = (TaskId) me.getKey();
-							out.println(tidlocal.getTaskId() +" == "+taskID+" && "+tidlocal.getClientID() +" == "+ clientID);
+//							out.println(tidlocal.getTaskId() +" == "+taskID+" && "+tidlocal.getClientID() +" == "+ clientID);
 							if (tidlocal.getTaskId() == taskID
 									&& tidlocal.getClientID() == clientID) {
 								Thread th = (Thread) me.getValue();
@@ -472,13 +473,13 @@ public class Worker {
 
 							}
 						}
-						System.out.println("Now, I have "+set.size()+" tasks in my queue");
+//						System.out.println("Now, I have "+set.size()+" tasks in my queue");
 
 					}
 				} else {
 					numberOfAllowedCache.release();
 				}
-				out.println("matou: " + clientID +" "+ taskID );
+//				out.println("matou: " + clientID +" "+ taskID );
 				break;
 			case WORKER_CANCEL_CLIENT_TASK:
 				break;
@@ -495,18 +496,18 @@ public class Worker {
 
 				int clientId = (Integer) socketIn.readObject();
 				
-				out.println("Tenta matar tudo do client:" + clientId);
+//				out.println("Tenta matar tudo do client:" + clientId);
 				if (!removeTaskcacheList(clientId)) {
 					synchronized (currentTask) {
 
 						Set<Entry<TaskId, TaskThread>> set = currentTask
 								.entrySet();
-						System.out.println("I have "+set.size()+" tasks in my queue");
+//						System.out.println("I have "+set.size()+" tasks in my queue");
 						Iterator<Entry<TaskId, TaskThread>> i = set.iterator();
 						while (i.hasNext()) {
 							Map.Entry me = i.next();
 							TaskId tidlocal = (TaskId) me.getKey();
-							out.println(tidlocal.getClientID() +" == "+ clientId);
+//							out.println(tidlocal.getClientID() +" == "+ clientId);
 							if (tidlocal.getClientID() == clientId) {
 								Thread th = (Thread) me.getValue();
 								// out.println(th.getState());
@@ -537,7 +538,7 @@ public class Worker {
 
 							}
 						}
-						System.out.println("Now, I have "+set.size()+" tasks in my queue");
+//						System.out.println("Now, I have "+set.size()+" tasks in my queue");
 
 					}
 				} else {
@@ -549,12 +550,12 @@ public class Worker {
 
 				break;
 			case KILL_WORKER:
-				out.println("I'm being killed!");
+//				out.println("I'm being killed!");
 				System.out.println("type: "+type);
 				startShutdown();
 				break;
 			case KICK_WORKER:
-				out.println("I'm being kicked!");
+//				out.println("I'm being kicked!");
 				disconnect();
 				break;
 			}
@@ -592,7 +593,7 @@ public class Worker {
 					// execSvc.execute( new
 					// WorkerThread(cachedTask.getTask(),cachedTask.getTaskid()));
 					
-					System.out.println("starting new task: " + cachedTask.getTaskid());
+//					System.out.println("starting new task: " + cachedTask.getTaskid());
 
 					
 					execSvc.submit(new WorkerThread(cachedTask.getTask(),
@@ -642,6 +643,7 @@ public class Worker {
 
 		private Task task;
 		private TaskId tid;
+		private MyUncaughtExceptionHandler handler = new MyUncaughtExceptionHandler();
 
 		public WorkerThread(Task task, TaskId tid) {
 			this.task = task;
@@ -649,13 +651,13 @@ public class Worker {
 		}
 
 		public void run() {
-			System.out.println("Running Thread!");
+//			System.out.println("Running Thread!");
 			boolean flag = false;
 			long elapsedTime = 0L;
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			task.setFileProvider(new RemoteFileProvider((int) tid.getClientID()));
 			TaskThread thread = new TaskThread(task, tid);
-			System.out.println("Let's go");
+//			System.out.println("Let's go");
 			synchronized (currentTask) {
 				currentTask.put(tid, thread);
 			}
@@ -672,9 +674,10 @@ public class Worker {
 					long startTime = System.currentTimeMillis();
 					Result result;
 					thread.start();
+					thread.setUncaughtExceptionHandler(handler);
 
 					try {
-						System.out.println("Waiting for task to finish...");
+//						System.out.println("Waiting for task to finish...");
 						thread.join();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -708,7 +711,7 @@ public class Worker {
 
 						Date date = new Date();
 						String endTime = dateFormat.format(date);
-						System.out.println("Finalizing....");
+//						System.out.println("Finalizing....");
 						synchronized (workerData) {
 							workerData.setNumberOfTasksProcessed();
 							workerData.setTotalTimeSpentFarming(elapsedTime);
@@ -731,15 +734,15 @@ public class Worker {
 								}
 							}
 						}
-						System.out.println("Everything OK!");
+//						System.out.println("Everything OK!");
 					}else {
-						System.out.println("KILLED not ended...");
+//						System.out.println("KILLED not ended...");
 					}
 					synchronized (currentTask) {
-						System.out.println("Removing task");
+//						System.out.println("Removing task");
 						currentTask.remove(tid);
 						freeTask();
-						System.out.println("Task removed");
+//						System.out.println("Task removed");
 					}
 
 				}
@@ -790,22 +793,30 @@ public class Worker {
 						e.printStackTrace(out);
 						exception = e;
 						// this.interrupt();
-					} catch(Throwable e){
-						e.printStackTrace();
 					}
+//					catch(Throwable e){
+//						e.printStackTrace();
+//					}
 					if (getException() != null) {
 						result = new Result();
 						result.setException(getException());
 					} else {
 						result = task.getResult();
 					}
+					done = true;
 				} catch(Exception e) {
 					e.printStackTrace();
 				}
-
-				done = true;
+//				catch(Throwable e) {
+//					e.printStackTrace();
+//				}
+				
+//				try {
+//					Thread.sleep(2000);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
 			}
-
 		}
 	}
 
@@ -847,7 +858,7 @@ public class Worker {
 
 	private void startShutdown() {
 		shutdown = true;
-		System.out.println("I'm REALLY being killed!");
+//		System.out.println("I'm REALLY being killed!");
 		disconnect();
 	}
 
@@ -896,4 +907,15 @@ public class Worker {
 			}
 		}
 	}
+	
+}
+class MyUncaughtExceptionHandler implements UncaughtExceptionHandler {
+
+	@Override
+	public void uncaughtException(Thread t, Throwable e) {
+//		System.out.println("###########################This was uncaught");
+//		if(e != null)
+//			e.printStackTrace();
+	}
+	
 }
