@@ -183,7 +183,7 @@ public class Webserver extends Thread {
 
 			try {
 				requestedfile = new FileInputStream(path);
-
+				
 				// find out what the filename ends with,
 				// so you can construct a the right content type
 				if (path.endsWith(".zip") || path.endsWith(".exe")
@@ -219,7 +219,8 @@ public class Webserver extends Thread {
 			} catch (IOException e) {
 				try {
 					// if you could not open the file send a 404
-					System.out.println("File doesn't exists " + path);
+					System.out.println("File doesn't exist " + path);
+					e.printStackTrace();
 					output.writeBytes(construct_http_header(404, 0));
 					output.close();
 				} catch (Exception e2) {
