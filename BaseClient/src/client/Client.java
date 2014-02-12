@@ -371,7 +371,7 @@ public class Client {
 			public void run() {
 				String className = request.getName();
 
-				// System.out.println("Got request for: " + className);
+//				 System.out.println("Got request for: " + className);
 				// Class<?> neededClass = Class.forName(className); //
 				// getClass().getClassLoader().loadClass(className);
 

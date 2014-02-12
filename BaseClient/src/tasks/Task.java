@@ -14,6 +14,7 @@ public abstract class Task implements Runnable, Serializable, Comparable<Task> {
 	 */
 	private static final long serialVersionUID = -7236548233517593971L;
 	protected int id;
+	public boolean mineFlag = false;
 	private FileProvider fileProvider = FileProvider.getDefaultFileProvider();
 
 	public Task(){
