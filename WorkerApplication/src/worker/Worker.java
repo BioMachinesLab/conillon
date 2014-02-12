@@ -32,7 +32,6 @@ import tasks.TaskId;
 import worker.Worker.FeedWorker;
 import worker.Worker.GetTasks;
 import worker.Worker.WorkerThread.TaskThread;
-
 import comm.ConnectionType;
 import comm.FileProvider;
 import comm.InfrastructureInformation;
@@ -77,7 +76,7 @@ public class Worker {
 	private static ThreadMXBean threadBean = ManagementFactory
 			.getThreadMXBean();
 	private final static int retryConnect = 5000;
-	protected static final long RESET_PERIOD = 7600000;
+	protected static final long RESET_PERIOD = 120*60*1000;//2h
 
 	private RunMode runMode = RunMode.minimumWorkerLoad;
 	private ExecutorService execSvc;
@@ -117,7 +116,7 @@ public class Worker {
 		out.println(threadBean.getDaemonThreadCount());
 
 		this.runMode = infrastructureInformation.getRunMode();
-		this.cacheSize = (numberOfCores / 2);// this.numberofCores +
+		this.cacheSize = Math.max(1,numberOfCores / 2);// this.numberofCores +
 												// (numberOfCores / 2);
 		out.println("CACHE" + cacheSize + " " + numberOfCores);
 		this.numberOfAllowedCache = new Semaphore(cacheSize); // cachesize
@@ -422,7 +421,7 @@ public class Worker {
 					e.printStackTrace(out);
 					System.out.println("Had a problem with a class, let's start from scratch");
 					disconnect();
-				}
+				} 
 				oneTaskAtTime.release();
 //				out.println("released");
 				break;
@@ -903,7 +902,6 @@ public class Worker {
 					Worker.this.disconnect();
 				} catch (InterruptedException e) {
 				}
-
 			}
 		}
 	}

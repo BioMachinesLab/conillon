@@ -6,11 +6,6 @@ import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import javax.swing.JApplet;
-
-import screensaver.ScreenSaverWindow;
-import web.WebRunner;
 import worker.Worker;
 import worker.WorkerData;
 import worker.WorkerInformation;
@@ -19,7 +14,7 @@ import comm.InfrastructureInformation;
 import comm_2.Comm;
 import comm_2.Streams;
 
-public class Main implements WebRunner {
+public class Main {
 
 	// ********** VERSION ******************
 	private final static String VERSION = "Version "
@@ -28,7 +23,7 @@ public class Main implements WebRunner {
 	private static int MAINSERVERPORT = 9999;
 	//private static String MAINSERVERADDRESS = "localhost";
 	 private static String MAINSERVERADDRESS = "evolve.dcti.iscte.pt";
-	// private static String MAINSERVERADDRESS = "10.40.50.96";
+//	 private static String MAINSERVERADDRESS = "10.40.50.215";
 	// private static String MAINSERVERADDRESS = "10.10.34.85";
 	// private static String MAINSERVERADDRESS = "192.168.1.4";
 
@@ -38,9 +33,7 @@ public class Main implements WebRunner {
 	private InfrastructureInformation infrastructureInformation;
 	private int numberOfProcessors = 0; // at least one`
 	private int myID;
-	private final static int retryConnect = 5000;
-	private boolean screenSaverMode = false;
-	private ScreenSaverWindow sw;
+	private final static int retryConnect = 1*60*1000;
 	private Worker worker;
 
 	private boolean isRestricted;
@@ -62,27 +55,6 @@ public class Main implements WebRunner {
 		out.println(MAINSERVERADDRESS);
 		worker = new Worker(isRestricted, new GuiClientInfoUpdater());
 
-
-		if (screenSaverMode) {
-			sw = new ScreenSaverWindow(worker);
-			sw.start();
-		}
-		out.println(VERSION);
-	}
-	
-	public Main(boolean screensaver) {
-		super();
-		screenSaverMode = screensaver;
-		this.isRestricted = false;
-		this.out = System.out;
-		out.println(MAINSERVERADDRESS);
-		worker = new Worker(isRestricted, new GuiClientInfoUpdater());
-
-
-		if (screenSaverMode) {
-			sw = new ScreenSaverWindow(worker);
-			sw.start();
-		}
 		out.println(VERSION);
 	}
 	
@@ -111,11 +83,7 @@ public class Main implements WebRunner {
 		worker = new Worker(isRestricted, guiUpdater);
 
 		if (args.length > 1)
-			numberOfProcessors = new Integer(args[1]);
-		if (screenSaverMode) {
-			sw = new ScreenSaverWindow(worker);
-			sw.start();
-		}
+			numberOfProcessors = Math.max(new Integer(args[1]),2);
 		out.println(VERSION);
 		execute();
 
@@ -210,9 +178,5 @@ public class Main implements WebRunner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void setAttribute(String a) {
 	}
 }
