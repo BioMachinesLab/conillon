@@ -90,6 +90,8 @@ public class Worker {
 	private Restarter restarter;
 	private GetTasks taskGetter;
 	private FeedWorker taskFeeder;
+	
+	public static boolean gettingClasses = false;
 
 	public Worker(boolean isRestricted, GuiClientInfoUpdater guiUpdater) {
 		this.isRestricted = isRestricted;
@@ -442,12 +444,22 @@ public class Worker {
 //							out.println(tidlocal.getTaskId() +" == "+taskID+" && "+tidlocal.getClientID() +" == "+ clientID);
 							if (tidlocal.getTaskId() == taskID
 									&& tidlocal.getClientID() == clientID) {
-								Thread th = (Thread) me.getValue();
-								// out.println(th.getState());
-
-								th.stop();
+								TaskThread th = (TaskThread) me.getValue();
 								
-								i.remove();
+								boolean stopped = false;
+								
+								//this was added because killing a task when the RemoteClassLoader
+								//was fetching classes would cause the worker to die (RCS thread would explode)
+								while(!stopped) {
+									if(gettingClasses) {
+										Thread.sleep(1000);
+									} else {
+										stopped = true;
+									// out.println(th.getState());
+										th.stop();
+										i.remove();
+									}
+								}
 								// try {
 								// th.join();
 								// } catch (InterruptedException e) {
@@ -902,6 +914,7 @@ public class Worker {
 					Worker.this.disconnect();
 				} catch (InterruptedException e) {
 				}
+				System.exit(0);
 			}
 		}
 	}

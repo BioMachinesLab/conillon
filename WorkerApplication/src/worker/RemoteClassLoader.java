@@ -36,6 +36,7 @@ public class RemoteClassLoader extends ClassLoader {
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
+		Worker.gettingClasses = true;
 		try {
 			int id = Integer.parseInt(name.substring(2, name.indexOf(".")));
 			byte[] classInfo = codeServerComunicator.requestClass(id, name);
@@ -47,13 +48,15 @@ public class RemoteClassLoader extends ClassLoader {
 //				classInfo = (byte[]) inStream.readObject();
 //				//			System.out.println("FIND CLASS" + classInfo.toString());
 //			}
-
+			Worker.gettingClasses = false;
 			return defineClass(name, classInfo, 0, classInfo.length);
 		}catch (java.lang.NumberFormatException e){
 			System.out.println("ERRO");
+			Worker.gettingClasses = false;
 			throw e;
 		} catch (IOException e) {
 			e.printStackTrace();
+			Worker.gettingClasses = false;
 			throw new ClassNotFoundException(name + " - " + e.toString());
 		}
 	}
