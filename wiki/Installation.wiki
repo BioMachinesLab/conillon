@@ -5,7 +5,7 @@
 In this page, you can find information on how to install and run Conilon on your network. Conilon is composed of several different elements:
 
  * Clients: generate tasks that need to be executed
- * Workers: execute the Clients' taks
+ * Workers: execute the Clients' tasks
  * Master Server: manages task distribution from Clients to Workers
  * Code Server: manages runtime code requests from Workers
 
