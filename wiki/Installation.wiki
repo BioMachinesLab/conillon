@@ -1,0 +1,63 @@
+#summary Installation instructions for Conilon
+
+= Introduction =
+
+In this page, you can find information on how to install and run Conilon on your network. Conilon is composed of several different elements:
+
+-Clients: generate tasks that need to be executed
+-Workers: execute the Clients' taks
+-Master Server: manages task distribution from Clients to Workers
+-Code Server: manages runtime code requests from Workers
+
+= Getting the Code =
+
+In this repository, you can find several projects. Checkout the following projects into your IDE:
+
+-BaseClient
+-CodeServer
+-MasterServer
+-WorkerApplication
+
+Optionally, checkout ConillonAdmin if you want to see if everything is running smoothly.
+
+= Generating the JARs =
+
+Generate runnable jars for the following projects:
+
+-BaseClient (client.jar) (main class: ClassCodeServer)
+-MasterServer (master.jar) (main class: CommServer)
+-WorkerApplication (worker.jar) (main class: Main)
+-ConillonAdmin (adm.jar) (main class: StandAloneAdm)
+
+Generate a simple library jar for the following projects:
+
+-BaseClient
+
+= Running the Server =
+
+One computer will be responsible for serving code and tasks. In the following examples, let's assume that the IP of that computer is 1.1.1.1. Don't forget to change the IP to the correct IP of the server computer. In that computer, run the two following commands, in this order
+
+{{{
+java -jar code.jar
+java -jar master.jar 1.1.1.1
+}}}
+
+Conilon should now be running, and you can check that it is by using the Admin application from any computer in the network:
+
+{{{
+java -jar adm.jar 1.1.1.1
+}}}
+
+= Recruiting Workers =
+
+Workers can connect to Conilon by running the following command:
+
+{{{
+java -jar worker.jar 1.1.1.1
+}}}
+
+It is also possible to create an HTML page in the Server's working directory in order to load the worker Applet, for instance.
+
+= Submitting Tasks =
+
+In your Java project, import the client.jar library. You can now extend the Task class, like so:
