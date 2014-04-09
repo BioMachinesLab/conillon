@@ -4,19 +4,19 @@
 
 In this page, you can find information on how to install and run Conilon on your network. Conilon is composed of several different elements:
 
--Clients: generate tasks that need to be executed
--Workers: execute the Clients' taks
--Master Server: manages task distribution from Clients to Workers
--Code Server: manages runtime code requests from Workers
+ * Clients: generate tasks that need to be executed
+ * Workers: execute the Clients' taks
+ * Master Server: manages task distribution from Clients to Workers
+ * Code Server: manages runtime code requests from Workers
 
 = Getting the Code =
 
 In this repository, you can find several projects. Checkout the following projects into your IDE:
 
--BaseClient
--CodeServer
--MasterServer
--WorkerApplication
+ * BaseClient
+ * CodeServer
+ * MasterServer
+ * WorkerApplication
 
 Optionally, checkout ConillonAdmin if you want to see if everything is running smoothly.
 
@@ -24,14 +24,22 @@ Optionally, checkout ConillonAdmin if you want to see if everything is running s
 
 Generate runnable jars for the following projects:
 
--BaseClient (client.jar) (main class: ClassCodeServer)
--MasterServer (master.jar) (main class: CommServer)
--WorkerApplication (worker.jar) (main class: Main)
--ConillonAdmin (adm.jar) (main class: StandAloneAdm)
+ * BaseClient
+  * client.jar
+  * main class: ClassCodeServer
+ * MasterServer
+  * master.jar
+  * main class: CommServer
+ * WorkerApplication
+  * worker.jar
+  * main class: Main
+ * ConillonAdmin
+  * adm.jar
+  * main class: StandAloneAdm
 
 Generate a simple library jar for the following projects:
 
--BaseClient
+ * BaseClient
 
 = Running the Server =
 
@@ -61,3 +69,7 @@ It is also possible to create an HTML page in the Server's working directory in 
 = Submitting Tasks =
 
 In your Java project, import the client.jar library. You can now extend the Task class, like so:
+
+{{{
+
+}}}
