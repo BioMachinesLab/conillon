@@ -66,10 +66,28 @@ java -jar worker.jar 1.1.1.1
 
 It is also possible to create an HTML page in the Server's working directory in order to load the worker Applet, for instance.
 
-= Submitting Tasks =
+= Creating Tasks =
 
 In your Java project, import the client.jar library. You can now extend the Task class, like so:
 
 {{{
 
+}}}
+
+= Submitting Tasks =
+
+In order to submit your task, all you have to do is create a Client, connect to the server and start submitting:
+
+{{{
+    ClientPriority priority = ClientPriority.NORMAL;
+    int serverPort = 0; //this will choose the default server port
+    int codePort = //this will choose the default server port
+    String serverName = "1.1.1.1";	
+    String description = "PiTask";
+
+    Client client = new Client(description,priority, serverName, serverPort, serverName, codePort);
+
+    PiTask task = new PiTask();
+    client.submit(task);
+    Result result = client.getNextResult(); //getNextResult blocks until one task is remotely executed and returned
 }}}
