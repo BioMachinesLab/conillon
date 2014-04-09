@@ -71,7 +71,46 @@ It is also possible to create an HTML page in the Server's working directory in 
 In your Java project, import the client.jar library. You can now extend the Task class, like so:
 
 {{{
+import result.Result;
+import tasks.Task;
 
+public class SimpleSampleTask extends Task {
+	
+	private int value;
+	
+	public SimpleSampleTask() {
+		super();
+	}
+	
+	@Override
+	public void run() {
+		Random rand = new Random();
+		this.value = rand.nextInt(100);
+	}
+	
+	public Result getResult() {
+		SimpleResult result = new SimpleResult(this.value);
+	}
+}
+}}}
+
+The result you want from your Task can be defined using a new Result class:
+
+{{{
+import result.Result;
+
+public class SimpleResult extends Result {
+	private int result;
+
+	public SimpleResult(int result) {
+		super();
+		this.result = result;
+	}
+
+	public double getResult() {
+		return result;
+	}
+}
 }}}
 
 = Submitting Tasks =
@@ -79,15 +118,17 @@ In your Java project, import the client.jar library. You can now extend the Task
 In order to submit your task, all you have to do is create a Client, connect to the server and start submitting:
 
 {{{
-    ClientPriority priority = ClientPriority.NORMAL;
-    int serverPort = 0; //this will choose the default server port
-    int codePort = //this will choose the default server port
-    String serverName = "1.1.1.1";	
-    String description = "PiTask";
+	ClientPriority priority = ClientPriority.NORMAL;
+	int serverPort = 0; //this will choose the default server port
+	int codePort = 0;
+	String serverName = "1.1.1.1"; //Conilon server IP
+	String description = "PiTask";
 
-    Client client = new Client(description,priority, serverName, serverPort, serverName, codePort);
+	Client client = new Client(description,priority, serverName, serverPort, serverName, codePort);
 
-    PiTask task = new PiTask();
-    client.submit(task);
-    Result result = client.getNextResult(); //getNextResult blocks until one task is remotely executed and returned
+	SimpleTask task = new SimpleTask();
+	client.submit(task);
+	Result result = client.getNextResult(); //getNextResult blocks until one task is remotely executed and returned
+	SimpleResult simpleResult = (SimpleResult)result;
+	System.out.println(simpleResult.getResult());
 }}}
