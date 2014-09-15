@@ -33,7 +33,7 @@ class ClassPackageAdder extends ClassVisitor implements Opcodes {
 
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
-
+		
 		if ((access & ACC_INTERFACE) != 0) {
 			hasNullConstruct = true;
 		}

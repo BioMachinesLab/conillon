@@ -103,6 +103,8 @@ public class ASMTranslator implements Translator {
 			IllegalAccessException, InterruptedException {
 
 		String className = instance.getClass().getName();
+		
+		
 		Object copyObject = null;
 		// if (!Utils.nonSystemName(className, packageNameConverted)) {
 		if (!Utils.nonPrimitiveName(className)
@@ -149,6 +151,9 @@ public class ASMTranslator implements Translator {
 						} catch (InvocationTargetException e1) {
 							copyObject = instance;
 						}
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+						throw e;
 					}
 				} else {
 					copyClass = instance.getClass();
@@ -518,6 +523,7 @@ public class ASMTranslator implements Translator {
 			ClassNotFoundException, InstantiationException,
 			IllegalArgumentException, InterruptedException {
 		Object duplicateCopy;
+		
 		if (!fOriginal.getName().equals(fDuplicate.getName())) {
 			throw new IllegalArgumentException();
 		}
