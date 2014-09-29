@@ -195,6 +195,8 @@ public class Gui extends JApplet implements ActionListener {
 	
 							int clientSelecteRow = jTableClient.getSelectedRow();
 							int workerSelecteRow = jTableWorker.getSelectedRow();
+							int mixedClientSelecteRow = jTableMixedClient.getSelectedRow();
+							int mixedWorkerSelecteRow = jTableMixedWorker.getSelectedRow();
 	
 							Long newServerTime = (Long) in.readObject();
 							Long elapsedTime = (currentServerTime == null) ? 1
@@ -266,6 +268,13 @@ public class Gui extends JApplet implements ActionListener {
 									jTableWorker.setRowSelectionInterval(
 											workerSelecteRow, workerSelecteRow);
 								}
+								
+								if (mixedWorkerSelecteRow >= 0
+										&& mixedWorkerSelecteRow < workerTableModel
+												.getRowCount()) {
+									jTableMixedWorker.setRowSelectionInterval(
+											mixedWorkerSelecteRow, mixedWorkerSelecteRow);
+								}
 	
 							} else {
 								workerKeys = null;
@@ -291,6 +300,14 @@ public class Gui extends JApplet implements ActionListener {
 									jTableClient.setRowSelectionInterval(
 											clientSelecteRow, clientSelecteRow);
 								}
+								
+								if (mixedClientSelecteRow >= 0
+										&& mixedClientSelecteRow < clientTableModel
+												.getRowCount()) {
+									jTableMixedClient.setRowSelectionInterval(
+											mixedClientSelecteRow, mixedClientSelecteRow);
+								}
+								
 							} else {
 								clientKeys = null;
 							}
@@ -518,8 +535,6 @@ public class Gui extends JApplet implements ActionListener {
 			}
 		});
 		
-		jTableMixedWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(
-				true));
 		jTableMixedWorker.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isLeftMouseButton(e)) {
