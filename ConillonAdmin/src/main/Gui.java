@@ -35,6 +35,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -48,7 +49,6 @@ import javax.swing.table.TableRowSorter;
 
 import worker.WorkerData;
 import client.ClientData;
-
 import comm.ConnectionType;
 
 public class Gui extends JApplet implements ActionListener {
@@ -78,6 +78,8 @@ public class Gui extends JApplet implements ActionListener {
 
 	WorkerTableModel workerTableModel;
 	ClientTableModel clientTableModel;
+	WorkerTableModel mixedWorkerTableModel;
+	ClientTableModel mixedClientTableModel;
 
 	private Object[] workerKeys;
 	private Object[] clientKeys;
@@ -89,7 +91,9 @@ public class Gui extends JApplet implements ActionListener {
 	private Long currentServerTime;
 	private JTable jTableWorker;
 	private JTable jTableClient;
-
+	private JTable jTableMixedWorker;
+	private JTable jTableMixedClient;
+	
 	JTabbedPane tabbedPane = new JTabbedPane();
 
 	private GraphingData speedGraph = new GraphingData();
@@ -383,11 +387,18 @@ public class Gui extends JApplet implements ActionListener {
 
 		workerTableModel = new WorkerTableModel();
 		clientTableModel = new ClientTableModel();
+		mixedWorkerTableModel = new WorkerTableModel();
+		mixedClientTableModel = new ClientTableModel();
 		jTableWorker = new JTable(workerTableModel);
 		jTableWorker.setAutoCreateRowSorter(true);
 		jTableClient = new JTable(clientTableModel);
 		jTableClient.setAutoCreateRowSorter(true);
-
+	
+		jTableMixedWorker = new JTable(mixedWorkerTableModel);
+		jTableMixedWorker.setAutoCreateRowSorter(true);
+		jTableMixedClient = new JTable(mixedClientTableModel);
+		jTableMixedClient.setAutoCreateRowSorter(true);
+		
 		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(
 				jTableWorker.getModel());
 		jTableWorker.setRowSorter(sorter);
@@ -456,16 +467,33 @@ public class Gui extends JApplet implements ActionListener {
 
 		JPanel workers = new JPanel(new BorderLayout());
 		JPanel clients = new JPanel(new BorderLayout());
-
+		JPanel mixed = new JPanel(new BorderLayout());
+		JPanel mixedWorkers = new JPanel(new BorderLayout());
+		JPanel mixedClients = new JPanel(new BorderLayout());
+		
 		workers.add(buttonPanel1, BorderLayout.SOUTH);
 		workers.add(new JScrollPane(jTableWorker));
 
 		clients.add(buttonPanel2, BorderLayout.SOUTH);
 		clients.add(new JScrollPane(jTableClient));
 
+		mixedWorkers.add(buttonPanel1,BorderLayout.SOUTH);
+		mixedWorkers.add(new JScrollPane(jTableMixedWorker));
+		
+		mixedClients.add(buttonPanel2,BorderLayout.SOUTH);
+		mixedClients.add(new JScrollPane(jTableMixedClient));
+		
+		//Create a split pane with the two scroll panes in it.
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, mixedClients, mixedWorkers);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setDividerLocation(150);
+				
+		mixed.add(splitPane);
+		
 		tabbedPane.addTab("Status", status);
 		tabbedPane.add("Workers", workers);
 		tabbedPane.add("Clients", clients);
+		tabbedPane.add("Mixed", mixed);
 
 		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(
 				true));
@@ -488,6 +516,33 @@ public class Gui extends JApplet implements ActionListener {
 
 					int row = jTableClient.rowAtPoint(p);
 					inputClient.setText(jTableClient.getValueAt(row, 0)
+							.toString());
+
+				}
+			}
+		});
+		
+		jTableMixedWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(
+				true));
+		jTableMixedWorker.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (SwingUtilities.isLeftMouseButton(e)) {
+					Point p = e.getPoint();
+
+					int row = jTableMixedWorker.rowAtPoint(p);
+					inputWorker.setText(jTableMixedWorker.getValueAt(row, 0)
+							.toString());
+				}
+			}
+		});
+		
+		jTableMixedClient.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (SwingUtilities.isLeftMouseButton(e)) {
+					Point p = e.getPoint();
+
+					int row = jTableMixedClient.rowAtPoint(p);
+					inputClient.setText(jTableMixedClient.getValueAt(row, 0)
 							.toString());
 
 				}
