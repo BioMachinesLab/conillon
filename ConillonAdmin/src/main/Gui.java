@@ -78,8 +78,6 @@ public class Gui extends JApplet implements ActionListener {
 
 	WorkerTableModel workerTableModel;
 	ClientTableModel clientTableModel;
-	WorkerTableModel mixedWorkerTableModel;
-	ClientTableModel mixedClientTableModel;
 
 	private Object[] workerKeys;
 	private Object[] clientKeys;
@@ -387,16 +385,14 @@ public class Gui extends JApplet implements ActionListener {
 
 		workerTableModel = new WorkerTableModel();
 		clientTableModel = new ClientTableModel();
-		mixedWorkerTableModel = new WorkerTableModel();
-		mixedClientTableModel = new ClientTableModel();
 		jTableWorker = new JTable(workerTableModel);
 		jTableWorker.setAutoCreateRowSorter(true);
 		jTableClient = new JTable(clientTableModel);
 		jTableClient.setAutoCreateRowSorter(true);
 	
-		jTableMixedWorker = new JTable(mixedWorkerTableModel);
+		jTableMixedWorker = new JTable(workerTableModel);
 		jTableMixedWorker.setAutoCreateRowSorter(true);
-		jTableMixedClient = new JTable(mixedClientTableModel);
+		jTableMixedClient = new JTable(clientTableModel);
 		jTableMixedClient.setAutoCreateRowSorter(true);
 		
 		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(
