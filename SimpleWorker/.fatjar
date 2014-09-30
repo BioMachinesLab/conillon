@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Fri Feb 07 11:36:09 WET 2014
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=simpleworker.jar
+manifest.mergeall=true
+manifest.mainclass=worker.SimpleWorker
+manifest.file=manifest.mf
+jarname.isextern=false
+onejar.expand=
+excludes=<po|SimpleWorker>~worker.jar
+includes=
