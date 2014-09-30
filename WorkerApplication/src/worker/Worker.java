@@ -452,6 +452,7 @@ public class Worker {
 								//was fetching classes would cause the worker to die (RCS thread would explode)
 								while(!stopped) {
 									if(gettingClasses) {
+										System.out.println("Couldn't kill... getting classes! "+gettingClasses);
 										Thread.sleep(1000);
 									} else {
 										stopped = true;
@@ -914,7 +915,6 @@ public class Worker {
 					Worker.this.disconnect();
 				} catch (InterruptedException e) {
 				}
-				System.exit(0);
 			}
 		}
 	}
