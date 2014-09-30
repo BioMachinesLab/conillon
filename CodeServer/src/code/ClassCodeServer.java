@@ -46,7 +46,6 @@ public class ClassCodeServer {
 		receiveConnectionsForClassesThread.start();
 
 		System.out.println("Class Code Server started... ");
-		System.out.println("Version: May 31 - 2011");
 	}
 
 	public byte[] getClassBy(ClassRequest request) throws InterruptedException {
