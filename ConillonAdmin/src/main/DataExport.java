@@ -124,7 +124,7 @@ public class DataExport extends Thread {
 				     }
 				     while(s != null && !s.isEmpty());
 				} finally {
-				     if (output != null) try { output.close(); } catch (IOException logOrIgnore) {logOrIgnore.printStackTrace();}
+				     if (output != null) try { output.close(); } catch (IOException e) {e.printStackTrace();}
 				}				
 				sleep(10*1000);
 			}catch(Exception e){
