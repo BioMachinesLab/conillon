@@ -535,6 +535,8 @@ public class Gui extends JApplet implements ActionListener {
 			}
 		});
 		
+		jTableMixedWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
+		
 		jTableMixedWorker.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isLeftMouseButton(e)) {
