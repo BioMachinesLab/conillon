@@ -93,7 +93,6 @@ public class WorkerThread extends Thread implements Observer {
 					TaskId tid = (TaskId) in.readObject();
 					in.setProblemAndVersion((int) tid.getClientID());
 					Result result = (Result) in.readObject();
-
 					WorkerData tempWorkerData = (WorkerData) in.readObject();
 
 					// System.out.println("got: " + result);
@@ -103,22 +102,24 @@ public class WorkerThread extends Thread implements Observer {
 						out.reset();
 					}
 					TaskDescription task = null;
-
-					synchronized (taskList) {
-						Iterator<TaskDescription> taskIterator = taskList
-								.iterator();
-						while (taskIterator.hasNext()) {
-							task = taskIterator.next();
-							if (task.getId() == tid.getClientID()
-									&& task.getTaskId() == tid.getTaskId()) {
-								taskIterator.remove();
-								break;
-							}
-							task = null;
-						}
-					}
-
 					
+					if(result.getException() == null) {//new code
+						synchronized (taskList) {
+							Iterator<TaskDescription> taskIterator = taskList
+									.iterator();
+							while (taskIterator.hasNext()) {
+								task = taskIterator.next();
+								if (task.getId() == tid.getClientID()
+										&& task.getTaskId() == tid.getTaskId()) {
+									taskIterator.remove();
+									break;
+								}
+								task = null;
+							}
+						}
+					} else {
+						System.out.println("BAD WORKER, BAD!!!!! "+workerID);
+					}
 					
 					if (task != null) {
 						workerData.decreaseNumberOfRequestedTasks();
