@@ -65,6 +65,11 @@ public class WorkerThread extends Thread implements Observer {
 		try {
 			workerData = (WorkerData) in.readObject();
 			workerData.setWorkerAddress(socket.getInetAddress().toString());
+			
+			while(master.getBlackList().contains(workerData.getWorkerAddress())) {
+				Thread.sleep(10*60*1000);
+			}
+			
 			workerData.setStartTime(System.currentTimeMillis());
 			// System.out.println("SERVER ADDRESS: " +
 			// socket.getInetAddress().getHostAddress());
@@ -81,7 +86,7 @@ public class WorkerThread extends Thread implements Observer {
 			pingpong.start();
 			feedWorker.start();
 			ConnectionType type;
-			while (true) {
+			while (socket.isConnected()) {
 				type = (ConnectionType) in.readObject();
 				
 				switch (type) {
@@ -98,12 +103,15 @@ public class WorkerThread extends Thread implements Observer {
 					// System.out.println("got: " + result);
 
 					workerData.update(tempWorkerData);
+					
+					workerData.decreaseNumberOfRequestedTasks();
+					
 					synchronized (out) {
 						out.reset();
 					}
 					TaskDescription task = null;
 					
-					if(result.getException() == null) {//new code
+					if(result.getException() == null) {
 						synchronized (taskList) {
 							Iterator<TaskDescription> taskIterator = taskList
 									.iterator();
@@ -118,13 +126,13 @@ public class WorkerThread extends Thread implements Observer {
 							}
 						}
 					} else {
-						System.out.println("BAD WORKER, BAD!!!!! "+workerID);
+						System.out.println("An exception was returned by Worker "+workerID + " " + result.getException().getMessage());
 					}
 					
 					if (task != null) {
-						workerData.decreaseNumberOfRequestedTasks();
+						
 						if (result.getException() != null
-								&& task.getTrials() == 0) {
+								&& task.getTrials() == 3) {
 							task.incTrials();
 							task.setLastWorkerId(workerID);
 							master.resendTask(task);
@@ -141,13 +149,13 @@ public class WorkerThread extends Thread implements Observer {
 					}
 					socketInFlag = false;
 					break;
-				case WORKER_CANCELED_TASKS:
-					System.out.println("WORKER CANCELED TASKS");
-					break;
 
 				case WORKER_CANCELED_TASK_OK:
 					long clientID = (Long) in.readObject();
 					long taskID = (Long) in.readObject();
+					
+					workerData.decreaseNumberOfRequestedTasks();
+					
 					synchronized (taskList) {
 						Iterator<TaskDescription> taskIteratorDel = taskList
 								.iterator();
@@ -162,9 +170,10 @@ public class WorkerThread extends Thread implements Observer {
 							// changeStatusToTask_FaultTolerance(task,TaskStatus.FAILED,0);
 
 						}
-						if (task != null) {
-							workerData.decreaseNumberOfRequestedTasks();
-						}
+//						if (task != null) {
+						System.out.println("Worker "+workerID+" canceled a task");
+						
+//						}
 
 					}
 					break;
@@ -213,8 +222,16 @@ public class WorkerThread extends Thread implements Observer {
 		public void run() {
 			try {
 
-				while (true) {
-					Thread.sleep(TIME_TO_SEND_NEXT_PING);
+				while (socket.isConnected()) {
+					
+					try{
+					
+						Thread.sleep(TIME_TO_SEND_NEXT_PING);
+					
+					}catch(InterruptedException e) {
+						e.printStackTrace();
+					}
+					
 					synchronized (out) {
 						out.writeObject(ConnectionType.PING);
 					}
@@ -266,6 +283,7 @@ public class WorkerThread extends Thread implements Observer {
 			socket.close();
 
 		} catch (IOException e) {
+			e.printStackTrace();
 			try {
 //watch out				master.removeWorker(this.workerID, this);
 				in.close();
@@ -294,42 +312,42 @@ public class WorkerThread extends Thread implements Observer {
 		public void run() {
 			try {
 				while (true) {
+					TaskDescription taskDescription;
+					
 					synchronized (this) {
 						while (numberOfTasksToFeed <= 0) {
 							wait();
 						}
 						numberOfTasksToFeed--;
 					}
-					TaskDescription taskDescription = master.getTask(workerData);
+		
+					taskDescription = master.getTask(workerData);
 					if (taskDescription == null) {
 						terminateWorker();
 						return;
 					}
+					
+					
 					synchronized (taskList) {
 						taskList.add(taskDescription);
 					}
 					workerData.increaseNumberOfRequestedTasks();
-					try {
-
-						synchronized (out) {
-							sendingData = true;
-							out.writeObject(ConnectionType.FEED_WORKER);
-							out.writeObject(new TaskId(taskDescription.getId(),
-									taskDescription.getTaskId()));
-							out.writeObject(taskDescription.getTask());
-							out.reset();
-							sendingData = false;
-						}
-
-					} catch (IOException e) {
-						e.printStackTrace();
-						terminateWorker();
+				
+					synchronized (out) {
+						sendingData = true;
+						out.writeObject(ConnectionType.FEED_WORKER);
+						out.writeObject(new TaskId(taskDescription.getId(),
+								taskDescription.getTaskId()));
+						out.writeObject(taskDescription.getTask());
+						out.reset();
+						sendingData = false;
 					}
 				}
-			} catch (InterruptedException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
+				terminateWorker();
+				System.out.println("Feeder done!");
 			}
-			System.out.println("Feeder done!");
 		}
 	}
 
@@ -344,6 +362,8 @@ public class WorkerThread extends Thread implements Observer {
 				while (taskIterator.hasNext()) {
 					TaskDescription task = taskIterator.next();
 					if (task.getId() == clientDescription.getID()) {
+						//TODO
+						/*
 						synchronized (out) {
 							try {
 								out.writeObject(ConnectionType.CANCEL_TASK);
@@ -354,8 +374,9 @@ public class WorkerThread extends Thread implements Observer {
 								terminateWorker();
 							}
 						}
+						*/
 						taskIterator.remove();
-						workerData.decreaseNumberOfRequestedTasks();
+//						workerData.decreaseNumberOfRequestedTasks();
 					}
 
 				}
@@ -371,6 +392,8 @@ public class WorkerThread extends Thread implements Observer {
 							.getId()
 							&& task.getTaskId() == completedTask
 									.getTaskDescription().getTaskId()) {
+						//TODO
+						/*
 						synchronized (out) {
 							try {
 								out.writeObject(ConnectionType.CANCEL_TASK);
@@ -381,8 +404,9 @@ public class WorkerThread extends Thread implements Observer {
 								terminateWorker();
 							}
 						}
+						*/
 						taskIterator.remove();
-						workerData.decreaseNumberOfRequestedTasks();
+//						workerData.decreaseNumberOfRequestedTasks();
 					}
 
 				}

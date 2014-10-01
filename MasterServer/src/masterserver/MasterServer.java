@@ -1,15 +1,19 @@
 package masterserver;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Observable;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 import scheduler.TaskScheduler;
@@ -21,7 +25,6 @@ import worker.ClassLoaderObjectInputStream;
 import worker.WorkerData;
 import client.ClientData;
 import client.ClientDescription;
-
 import comm.ClientPriority;
 import comm.ConnectionType;
 import comm.InfrastructureInformation;
@@ -60,6 +63,8 @@ public class MasterServer {
 	private CanceledTaskObserver taskObserver = new CanceledTaskObserver();
 
 	private TaskScheduler taskScheduler = new TaskScheduler();
+	
+	private ArrayList<String> blackList = new ArrayList<String>();
 
 	public MasterServer(InfrastructureInformation infrastructureInformation) {
 		super();
@@ -68,7 +73,20 @@ public class MasterServer {
 		System.out.println(tmxb.getCurrentThreadCpuTime());
 		System.out.println(tmxb.getCurrentThreadUserTime());
 		System.out.println(tmxb.getDaemonThreadCount());
-		System.out.println("Version: Aug 30 - 2013 - Evolve");
+		System.out.println("Version: Oct - 2014 - Evolve");
+		
+		File f = new File("blacklist.txt");
+		
+		try {
+			Scanner s = new Scanner(f);
+			
+			while(s.hasNextLine()) {
+				blackList.add(s.nextLine().trim());
+			}
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -607,5 +625,9 @@ public class MasterServer {
 				workerThread.remove(wt);
 			}
 		}
+	}
+
+	public ArrayList<String> getBlackList() {
+		return blackList;
 	}
 }

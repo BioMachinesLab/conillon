@@ -113,6 +113,7 @@ class ClientThread extends Thread {
 			disconnect();
 			return;
 		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 			System.out.println("CLIENT: DISCONNECTED OR KILLED:" + this.myID);
 			disconnect();
 		}
@@ -155,7 +156,7 @@ class ClientThread extends Thread {
 		@Override
 		public void run() {
 
-			while (true) {
+			while (socket.isConnected()) {
 				synchronized (localTaskList) {
 					while (localTaskList.size() == 0) {// &&
 														// cd.getTotalNumberOfTasksDone()<cd.getTaskCounter()){

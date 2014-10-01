@@ -88,6 +88,7 @@ public class TaskScheduler {
 		}
 		synchronized (workingTasks) {
 			for (WorkerTasks wt : workingTasks) {
+				
 				if ((wt.getNumberWorkers() ==0 || wt.getNumberWorkers() == 1) && wt.taskNotOnWorker(workerData.getId())) {
 					return wt.task;
 				}
