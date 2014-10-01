@@ -159,17 +159,14 @@ public class Webserver extends Thread {
 				path = path.replaceAll("/", ".");
 				output.writeBytes(construct_http_header(200, 4));
 				ClassRequest neededClass = new ClassRequest(id, path);
-				System.out.println("needClass: " + neededClass);
 				byte[] classToSend = ccs.getClassBy(neededClass);
 				if (classToSend != null) {
-					System.out.println("Encontrou a class");
 
 					int[] x = new int[classToSend.length];
 					for (int j = 0; j < classToSend.length; j++) {
 						output.write(classToSend[j]);
 					}
 					output.close();
-					System.out.println("Class sent " + neededClass);
 					return;
 
 				}

@@ -18,6 +18,7 @@ public class ClientInfo {
 	private long codeBase;
 	private ObjectOutputStream out; 
 	private ObjectInputStream in;
+	private boolean deadClient = false;
 
 	public ClientInfo(int id, ObjectOutputStream out,
 			ObjectInputStream in, long codeBase) {
@@ -86,12 +87,20 @@ public class ClientInfo {
 	public void requestClass(ClassRequest request) {
 		try {
 			synchronized (out) {
-				System.out.println("__requesting "+request.getName()+" "+request.getId());
+//				System.out.println("__requesting "+request.getName()+" "+request.getId());
 				out.writeObject(request);
-				System.out.println("__received "+request.getName()+" "+request.getId());
+//				System.out.println("__received "+request.getName()+" "+request.getId());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void setDeadClient(boolean dead){
+		this.deadClient = dead;
+	}
+	
+	public boolean isDeadClient() {
+		return deadClient;
 	}
 }

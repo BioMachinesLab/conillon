@@ -42,16 +42,15 @@ public class ClassProvider {
 			// System.out.println(request);
 			while (neededClass == null) {
 				System.out.println("Class is null, need to ask someone! "+request.getId()+" "+request.getName());
+				ClientInfo clientInfo = null;
 				if (!requestedClasses.contains(request)) {
 					requestedClasses.add(request);
-					System.out.println("Added the class to the list");
-					ClientInfo clientInfo = null;
 					if (request.getName().startsWith("__")) {
 						long codeBase = Long.parseLong(request.getName()
 								.substring(2, request.getName().indexOf(".")));
 						LinkedList<ClientInfo> classProvidersForCodeBase = providers
 								.get(codeBase);
-						if (classProvidersForCodeBase == null) {
+						if (classProvidersForCodeBase == null || classProvidersForCodeBase.isEmpty()) {
 							System.out
 									.println("Error: no provider for codebase: "
 											+ codeBase);
@@ -59,17 +58,20 @@ public class ClassProvider {
 							return null;
 						}
 						clientInfo = classProvidersForCodeBase.getFirst();
-						System.out.println("Found a provider: "+clientInfo.hashCode()+" "+codeBase);
+						System.out.println("Found a provider: "+clientInfo+" "+codeBase);
 					} else {
 						clientInfo = classSolver.getClientInfo(request.getId());
 					}
 					System.out.println("Requesting class "+request.getName()+" "+request.getId());
 					clientInfo.requestClass(request);
 				}
-				System.out.println("wait" + Thread.currentThread());
 				wait();
-				System.out.println("Done wait" + Thread.currentThread());
+				
 				neededClass = classes.get(request);
+				
+				if(clientInfo == null || clientInfo.isDeadClient()) {
+					requestedClasses.remove(request);
+				}
 			}
 			requestedClasses.remove(request);
 		}
@@ -79,14 +81,14 @@ public class ClassProvider {
 	public synchronized void addClass(ClassRequest request, byte[] neededClass) {
 		classes.put(request, neededClass);
 		notifyAll();
-
-		System.out.println("Got class from client:" + request);
+		
+//		System.out.println("Got class from client:" + request);
 	}
 
 	public synchronized void providerDied() {
-		notifyAll();
 		//make sure all pending request are resubmit
 		requestedClasses.clear();
+		notifyAll();
 	}
 
 	public synchronized void removeClass(ClassRequest request) {
@@ -155,7 +157,9 @@ public class ClassProvider {
 			providers.remove(clientInfo.getCodeBase());
 			removeAllClassesWith(clientInfo.getCodeBase());
 		}
-
+		clientInfo.setDeadClient(true);
+		notifyAll();
+		
 		// Iterator<ClassRequest> it = classProvidersByClassRequest.keySet()
 		// .iterator();
 		// while (it.hasNext()) {

@@ -224,12 +224,12 @@ public class ClassCodeServer {
 		public void run() {
 			try {
 				try {
-					while (true) {
+					while (socket.isConnected()) {
 
 						ClassRequest neededClassRequest = (ClassRequest) in
 								.readObject();
 						byte[] neededClass = null;
-						System.out.println("Worker asked for class: " + neededClassRequest.getName());
+//						System.out.println("Worker asked for class: " + neededClassRequest.getName());
 						
 						if(neededClassRequest.getName().startsWith("__") || neededClassRequest.getName().contains("/")) {
 							neededClass = getClassBy(neededClassRequest);
@@ -239,21 +239,10 @@ public class ClassCodeServer {
 
 						out.writeObject(neededClass);
 						// out.writeObject(newClass);
-						 System.out.println("Sent class to worker: " + neededClass);
+//						 System.out.println("Sent class to worker: " + neededClass);
 					}
-				} catch (EOFException e) {
-					try {
-						in.close();
-						out.close();
-						socket.close();
-						return;
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-
 				} catch (IOException e) {
 					e.printStackTrace();
-
 					try {
 						in.close();
 						out.close();
