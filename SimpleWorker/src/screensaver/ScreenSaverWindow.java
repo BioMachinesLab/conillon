@@ -12,7 +12,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
-import java.io.File;
 import java.util.Random;
 
 import javax.swing.JFrame;
@@ -114,7 +113,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 		while( t == proc ){
 			try{
 				if(!worker.running) {
-					worker = new SimpleWorker();
+					worker = new SimpleWorker(new String[]{SimpleWorker.EVOLVE_ADDRESS});
 					worker.start();
 				}
 				Thread.sleep( 2000 );

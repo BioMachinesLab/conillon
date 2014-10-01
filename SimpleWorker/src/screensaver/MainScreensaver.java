@@ -14,7 +14,7 @@ public class MainScreensaver {
 		
 		ScreenSaverWindow sw = null;
 		
-		simpleWorker = new SimpleWorker();
+		simpleWorker = new SimpleWorker(new String[]{SimpleWorker.EVOLVE_ADDRESS});
 		
 		sw = new ScreenSaverWindow(simpleWorker);
 		sw.start();

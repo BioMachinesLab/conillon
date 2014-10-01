@@ -10,13 +10,21 @@ import java.net.URLConnection;
 
 public class SimpleWorker extends Thread {
 	
+	public static final String EVOLVE_ADDRESS = "evolve.dcti.iscte.pt";
+	
 	Process p;
-	static String ip = "evolve.dcti.iscte.pt";
+	static String ip = "";
 	static String folderLocation = "conilon";//"C:\\";
 	public boolean running = true;
 	private long RESET_PERIOD = 120*60*1000;//2h
 	
-	public SimpleWorker() {
+	public SimpleWorker(String[] args) {	
+		
+		if(args.length > 0)
+			ip = args[0];
+		else
+			ip = EVOLVE_ADDRESS;
+		
 		String os = System.getProperty("os.name");
 		if(os.contains("Windows"))
 			folderLocation="C:\\conilon\\";
@@ -205,6 +213,6 @@ public class SimpleWorker extends Thread {
 	}
 	
 	public static void main(String[] args) {
-		new SimpleWorker().start();
+		new SimpleWorker(args).start();
 	}
 }

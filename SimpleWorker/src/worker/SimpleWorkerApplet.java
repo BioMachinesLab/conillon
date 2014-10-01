@@ -12,6 +12,8 @@ import javax.swing.JTextArea;
 
 public class SimpleWorkerApplet extends JApplet{
 	
+	
+	
 	SimpleWorker simpleWorker;
 	CapturePane capturePane;
 	
@@ -24,7 +26,7 @@ public class SimpleWorkerApplet extends JApplet{
 		PrintStream ps = System.out;
 		System.setOut(new PrintStream(new StreamCapturer(capturePane, ps)));
 		
-		simpleWorker = new SimpleWorker();
+		simpleWorker = new SimpleWorker(new String[]{SimpleWorker.EVOLVE_ADDRESS});
 		simpleWorker.start();
 	}
 	
