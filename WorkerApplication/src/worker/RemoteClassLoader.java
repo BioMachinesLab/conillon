@@ -1,6 +1,8 @@
 package worker;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+
 import comm_2.CodeServerComunicator;
 
 public class RemoteClassLoader extends ClassLoader {
@@ -36,7 +38,8 @@ public class RemoteClassLoader extends ClassLoader {
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		Worker.gettingClasses = true;
+		
+		boolean relinquished = false;
 		try {
 			int id = Integer.parseInt(name.substring(2, name.indexOf(".")));
 			byte[] classInfo = codeServerComunicator.requestClass(id, name);
@@ -48,17 +51,21 @@ public class RemoteClassLoader extends ClassLoader {
 //				classInfo = (byte[]) inStream.readObject();
 //				//			System.out.println("FIND CLASS" + classInfo.toString());
 //			}
-			Worker.gettingClasses = false;
+			
 			return defineClass(name, classInfo, 0, classInfo.length);
 		}catch (java.lang.NumberFormatException e){
-			System.out.println("ERRO");
-			Worker.gettingClasses = false;
+			System.out.println("I got this class, but couldn't separate the package! "+name);
+			
 			throw e;
-		} catch (IOException e) {
+		}  catch(ThreadDeath e) {
 			e.printStackTrace();
-			Worker.gettingClasses = false;
+			
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			
 			throw new ClassNotFoundException(name + " - " + e.toString());
-		}
+		} 
 	}
-
+	
 }

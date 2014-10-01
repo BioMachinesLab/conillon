@@ -91,8 +91,8 @@ public class Worker {
 	private GetTasks taskGetter;
 	private FeedWorker taskFeeder;
 	
-	public static boolean gettingClasses = false;
-
+	public static int myNumber = 0;
+	
 	public Worker(boolean isRestricted, GuiClientInfoUpdater guiUpdater) {
 		this.isRestricted = isRestricted;
 		this.guiUpdater = guiUpdater;
@@ -408,7 +408,7 @@ public class Worker {
 		taskGetter.start();
 		taskFeeder = new FeedWorker();
 		taskFeeder.start();
-
+		
 		ConnectionType type;
 		while (on) {
 			type = (ConnectionType) socketIn.readObject();
@@ -419,6 +419,7 @@ public class Worker {
 				try {
 					Task task = (Task) socketIn.readObject();
 					addTaskcacheList(tid, task);
+					myNumber++;
 				} catch (Exception e) {
 					e.printStackTrace(out);
 					System.out.println("Had a problem with a class, let's start from scratch");
@@ -430,7 +431,7 @@ public class Worker {
 			case CANCEL_TASK:
 				long clientID = (Long) socketIn.readObject();
 				long taskID = (Long) socketIn.readObject();
-//				out.println("Tenta matar:" + clientID +" "+ taskID);
+				out.println("Tenta matar:" + clientID +" "+ taskID);
 				if (!removeTaskcacheList(clientID, taskID)) {
 					synchronized (currentTask) {
 
@@ -438,12 +439,16 @@ public class Worker {
 								.entrySet();
 //						System.out.println("I have "+set.size()+" tasks in my queue");
 						Iterator<Entry<TaskId, TaskThread>> i = set.iterator();
-						while (i.hasNext()) {
+						boolean found = false;
+						while (i.hasNext() && !found) {
 							Map.Entry me = i.next();
 							TaskId tidlocal = (TaskId) me.getKey();
 //							out.println(tidlocal.getTaskId() +" == "+taskID+" && "+tidlocal.getClientID() +" == "+ clientID);
 							if (tidlocal.getTaskId() == taskID
 									&& tidlocal.getClientID() == clientID) {
+								
+								found = true;
+								
 								TaskThread th = (TaskThread) me.getValue();
 								
 								boolean stopped = false;
@@ -451,16 +456,21 @@ public class Worker {
 								//this was added because killing a task when the RemoteClassLoader
 								//was fetching classes would cause the worker to die (RCS thread would explode)
 								while(!stopped) {
-									if(gettingClasses) {
-										System.out.println("Couldn't kill... getting classes! "+gettingClasses);
-										Thread.sleep(1000);
-									} else {
-										stopped = true;
+									codeServerComunicator.permissionToKill();
+									stopped = true;
 									// out.println(th.getState());
+									i.remove();
+									
+									try{
+										th.kill();
 										th.stop();
-										i.remove();
+									} catch(Exception e) {
+										e.printStackTrace();
 									}
+									
+									codeServerComunicator.killingDone();
 								}
+								
 								// try {
 								// th.join();
 								// } catch (InterruptedException e) {
@@ -473,14 +483,15 @@ public class Worker {
 								// out.println("Matou Thread" + th.getId());
 
 								
-//								synchronized (socketOut) {
-//									socketOut
-//											.writeObject(ConnectionType.WORKER_CANCELED_TASK_OK);
-//									socketOut.writeObject(clientID);
-//									socketOut.writeObject(taskID);
-//									out.println("KILLED:" + clientID + ","
-//											+ taskID);
-//								}
+								synchronized (socketOut) {
+									socketOut
+											.writeObject(ConnectionType.WORKER_CANCELED_TASK_OK);
+									socketOut.writeObject(clientID);
+									socketOut.writeObject(taskID);
+									out.println("KILLED:" + clientID + ","
+											+ taskID);
+									myNumber--;
+								}
 								break;
 
 							}
@@ -491,9 +502,7 @@ public class Worker {
 				} else {
 					numberOfAllowedCache.release();
 				}
-//				out.println("matou: " + clientID +" "+ taskID );
-				break;
-			case WORKER_CANCEL_CLIENT_TASK:
+				out.println("matou: " + clientID +" "+ taskID );
 				break;
 			case PING:
 				synchronized (socketOut) {
@@ -508,7 +517,7 @@ public class Worker {
 
 				int clientId = (Integer) socketIn.readObject();
 				
-//				out.println("Tenta matar tudo do client:" + clientId);
+				out.println("Tenta matar tudo do client:" + clientId);
 				if (!removeTaskcacheList(clientId)) {
 					synchronized (currentTask) {
 
@@ -521,12 +530,21 @@ public class Worker {
 							TaskId tidlocal = (TaskId) me.getKey();
 //							out.println(tidlocal.getClientID() +" == "+ clientId);
 							if (tidlocal.getClientID() == clientId) {
-								Thread th = (Thread) me.getValue();
+								TaskThread th = (TaskThread) me.getValue();
 								// out.println(th.getState());
-
-								th.stop();
 								
+								codeServerComunicator.permissionToKill();
+
 								i.remove();
+								
+								try{
+									th.kill();
+									th.stop();
+								} catch(Exception e) {
+									e.printStackTrace();
+								}
+								
+								codeServerComunicator.killingDone();
 								// try {
 								// th.join();
 								// } catch (InterruptedException e) {
@@ -539,14 +557,15 @@ public class Worker {
 								// out.println("Matou Thread" + th.getId());
 
 								
-//								synchronized (socketOut) {
-//									socketOut
-//											.writeObject(ConnectionType.WORKER_CANCELED_TASK_OK);
-//									socketOut.writeObject(clientID);
-//									socketOut.writeObject(taskID);
-//									out.println("KILLED:" + clientID + ","
-//											+ taskID);
-//								}
+								synchronized (socketOut) {
+									socketOut
+											.writeObject(ConnectionType.WORKER_CANCELED_TASK_OK);
+									socketOut.writeObject(clientId);
+									socketOut.writeObject(tidlocal.getTaskId());
+									out.println("KILLED:" + clientId + ","
+											+ tidlocal.getTaskId());
+									myNumber--;
+								}
 
 							}
 						}
@@ -563,7 +582,6 @@ public class Worker {
 				break;
 			case KILL_WORKER:
 //				out.println("I'm being killed!");
-				System.out.println("type: "+type);
 				startShutdown();
 				break;
 			case KICK_WORKER:
@@ -731,7 +749,8 @@ public class Worker {
 							workerData.setLastTaskTime(elapsedTime);
 							workerData.setEndTime(endTime);
 							workerData.setWorkerStatus("Stopped...");
-							if (result != null) {
+							if (result != null && !thread.hasBeenKilled()) {
+								
 								synchronized (socketOut) {
 									socketOut
 											.writeObject(ConnectionType.WORKER_RESULTS);
@@ -743,6 +762,7 @@ public class Worker {
 									// + " C" + tid.getClientID());
 									socketOut.reset();
 									guiUpdater.updateClientInfo(workerData);
+									myNumber--;
 								}
 							}
 						}
@@ -771,6 +791,7 @@ public class Worker {
 			private Result result;
 			private RuntimeException exception;
 			private boolean done = false;
+			private boolean killed = false;
 
 			public TaskThread(Task task, TaskId tid) {
 				this.task = task;
@@ -828,6 +849,14 @@ public class Worker {
 //				} catch (InterruptedException e) {
 //					e.printStackTrace();
 //				}
+			}
+			
+			public void kill(){
+				killed = true;
+			}
+			
+			public boolean hasBeenKilled() {
+				return killed;
 			}
 		}
 	}

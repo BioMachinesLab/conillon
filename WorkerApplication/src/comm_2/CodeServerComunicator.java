@@ -9,6 +9,9 @@ import result.ClassRequest;
 public class CodeServerComunicator {
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
+	
+	private int gettingCode = 0;
+	private boolean killingTask = false;
 
 	public Hashtable<ClassRequest, byte[]> classes = new Hashtable<ClassRequest, byte[]>();
 
@@ -35,33 +38,78 @@ public class CodeServerComunicator {
 		ClassRequest classRequest = new ClassRequest(id, name);
 		byte[] classInfo = null;
 		
+		boolean releasedPermission = false;
+		
 		try {
 			if (classes.containsKey(classRequest)) {
 				classInfo = classes.get(classRequest);
 			} else {
 	
 				synchronized (this) {
-					System.out.println("Need " + name);
+					permissionToGetCode();
+					
 					out.writeObject(classRequest);
 					classInfo = (byte[]) in.readObject();
+					
+					gettingCodeDone();
+					releasedPermission = true;
+					
 					if (classInfo == null) {
 						System.out.println("Did not found file or class " + name);
+						if(!releasedPermission) {gettingCodeDone(); releasedPermission = true;}
 						throw new ClassNotFoundException(name);
 					}
-					System.out.println("GOT CLASS" + classInfo.toString());
-	
 					classes.put(classRequest, classInfo);
 				}
 			}
 		}catch(ClassCastException e) {
 			e.printStackTrace();
+			if(!releasedPermission) {gettingCodeDone(); releasedPermission = true;}
 //			throw new AbortWorkerException();
+		} catch(IOException e){
+			if(!releasedPermission) {gettingCodeDone(); releasedPermission = true;}
+			throw e;
+		} catch(ClassNotFoundException e) {
+			if(!releasedPermission) {gettingCodeDone(); releasedPermission = true;}
+			throw e;
 		}
 		return classInfo;
 	}
 
 	public synchronized void sendObject(Object object) throws IOException {
 		out.writeObject(object);
+	}
+	
+	public synchronized void permissionToKill() {
+		while(gettingCode > 0){
+			try{
+				wait();
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		killingTask = true;
+	}
+	
+	public synchronized void killingDone() {
+		killingTask = false;
+		notifyAll();
+	}
+	
+	public synchronized void permissionToGetCode() {
+		while(killingTask) {
+			try{
+				wait();
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		gettingCode++;
+	}
+	
+	public synchronized void gettingCodeDone() {
+		gettingCode--;
+		notifyAll();
 	}
 
 	public void disconect() {
