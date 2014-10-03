@@ -1,6 +1,7 @@
 package worker;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
@@ -11,6 +12,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -92,6 +94,7 @@ public class Worker {
 	private FeedWorker taskFeeder;
 	
 	public static int myNumber = 0;
+	static String folderLocation = "conilon";//"C:\\";
 	
 	public Worker(boolean isRestricted, GuiClientInfoUpdater guiUpdater) {
 		this.isRestricted = isRestricted;
@@ -308,7 +311,10 @@ public class Worker {
 			// SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			// Date date = new Date();
 			// this.workerData.setStartTime(dateFormat.format(date));
-
+			
+			Date date = getWorkerDate();
+			this.workerData.setJarDate(date);
+			
 			out.println(localhostinfo.toString());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -317,6 +323,26 @@ public class Worker {
 
 	}
 
+	private synchronized Date getWorkerDate(){
+		//Subtrair a data do sistema à data do jar e comparar o tempo a que o jar foi actualizado
+		try {
+			String os = System.getProperty("os.name");
+			if(os.contains("Windows"))
+				folderLocation="C:\\conilon\\";
+			
+			if(os.contains("nix") || os.contains("nux") || os.contains("aix"))
+				folderLocation+="/";
+
+			File worker = new File(folderLocation+"worker.jar");
+			SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy HH:mm:ss");
+			Date workerDate = sdf.parse(sdf.format(worker.lastModified()));
+			return workerDate;
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	private synchronized void addWork() {
 		// out.println("HERE");
 
