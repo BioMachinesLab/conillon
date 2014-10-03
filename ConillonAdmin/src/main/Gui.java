@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -104,6 +105,7 @@ public class Gui extends JApplet implements ActionListener {
 	private int idle;
 	private int cores;
 	private int tasks;
+	private Date evolveJarDate;
 
 	public void init() {
 
@@ -205,6 +207,9 @@ public class Gui extends JApplet implements ActionListener {
 							serverTime.setText("Server Time: "
 									+ new Time(currentServerTime - 3600000)
 											.toString());
+							
+							evolveJarDate = (Date)in.readObject();
+							
 							workerDataVector = (Hashtable<Long, WorkerData>) in
 									.readObject();
 							clientDataVector = (Hashtable<Long, ClientData>) in
@@ -259,7 +264,7 @@ public class Gui extends JApplet implements ActionListener {
 												+ " ("
 												+ String.valueOf(speed)
 												+ ")");
-	
+								
 								lastProcessed = totalProcessed;
 								workerTableModel.fireTableDataChanged();
 								if (workerSelecteRow >= 0
@@ -428,7 +433,7 @@ public class Gui extends JApplet implements ActionListener {
 
 		numberOfProcessedTasks = new JLabel("   ");
 		averageSystemSpeed = new JLabel("   ");
-
+		
 		buttonPanelNorth.add(serverTime);
 		buttonPanelNorth.add(new JLabel(" N Workers:"));
 		buttonPanelNorth.add(numberOfWorkers);
@@ -508,8 +513,7 @@ public class Gui extends JApplet implements ActionListener {
 		tabbedPane.add("Clients", clients);
 		tabbedPane.add("Mixed", mixed);
 
-		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(
-				true));
+		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
 		jTableWorker.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isLeftMouseButton(e)) {
@@ -705,7 +709,7 @@ public class Gui extends JApplet implements ActionListener {
 
 		@Override
 		public int getColumnCount() {
-			return 13;
+			return 14;
 		}
 
 		@Override
@@ -741,6 +745,8 @@ public class Gui extends JApplet implements ActionListener {
 				return "Speed/Core";
 			case 12:
 				return "STATUS";
+			case 13:
+				return "Worker Updated";
 			}
 			return "Unknown";
 		}
@@ -796,6 +802,17 @@ public class Gui extends JApplet implements ActionListener {
 							* 255), 0, 0);
 				}
 				return new WorkerStatus(color, lastRefresh);
+			case 13:
+				Color new_color;
+				Date workerJarDate = (Date)workerData.getJarDate();
+				
+				if (workerJarDate.after(evolveJarDate)){
+					new_color = Color.GREEN;
+				}else{
+					new_color = Color.RED;
+				}
+						
+				return new WorkerStatus(new_color);
 			}
 			return "Unknown";
 		}
@@ -820,24 +837,29 @@ public class Gui extends JApplet implements ActionListener {
 			WorkerStatus workerStatus = (WorkerStatus) ws;
 			Color newColor = workerStatus.getColor();
 			setHorizontalAlignment(CENTER);
-			setText(workerStatus.getTime() + "");
-			setBackground(newColor);
-			setForeground(new Color(255 - newColor.getRed(),
-					255 - newColor.getGreen(), 255 - newColor.getBlue()));
-			if (isBordered) {
-				if (isSelected) {
-					if (selectedBorder == null) {
-						selectedBorder = BorderFactory.createMatteBorder(2, 5,
-								2, 5, table.getSelectionBackground());
+			if(workerStatus.getTime() >= 0 ){
+				setText(workerStatus.getTime() + "");
+				setBackground(newColor);
+				setForeground(new Color(255 - newColor.getRed(),
+						255 - newColor.getGreen(), 255 - newColor.getBlue()));
+				if (isBordered) {
+					if (isSelected) {
+						if (selectedBorder == null) {
+							selectedBorder = BorderFactory.createMatteBorder(2, 5,
+									2, 5, table.getSelectionBackground());
+						}
+						setBorder(selectedBorder);
+					} else {
+						if (unselectedBorder == null) {
+							unselectedBorder = BorderFactory.createMatteBorder(2,
+									5, 2, 5, table.getBackground());
+						}
+						setBorder(unselectedBorder);
 					}
-					setBorder(selectedBorder);
-				} else {
-					if (unselectedBorder == null) {
-						unselectedBorder = BorderFactory.createMatteBorder(2,
-								5, 2, 5, table.getBackground());
-					}
-					setBorder(unselectedBorder);
 				}
+			}else{
+				setBackground(newColor);
+				setText("");
 			}
 			return this;
 		}
