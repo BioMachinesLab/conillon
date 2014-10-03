@@ -1,11 +1,17 @@
 package masterserver;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Hashtable;
+
 import org.json.JSONArray;
+
 import worker.WorkerData;
 import client.ClientData;
 import comm.ConnectionType;
@@ -100,6 +106,16 @@ public class AdminThread extends Thread {
 		JSONArray jsonArray;
 		out.writeObject(ConnectionType.FULL_UPDATE);
 		out.writeObject(new Long(System.currentTimeMillis()));
+		
+		try {
+			File worker = new File("worker.jar");
+			SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy HH:mm:ss");
+			Date adminDate = sdf.parse(sdf.format(worker.lastModified()));
+			out.writeObject(adminDate);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
 		synchronized (workerDataVector) {
 			out.writeObject(workerDataVector);
 			out.reset();
@@ -108,5 +124,6 @@ public class AdminThread extends Thread {
 			out.writeObject(clientDataVector);
 			out.reset();
 		}
+ 
 	}
 }
