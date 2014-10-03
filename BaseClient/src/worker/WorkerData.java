@@ -1,6 +1,7 @@
 package worker;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import comm.RunMode;
 
@@ -28,6 +29,8 @@ public class WorkerData implements Serializable {
 
 	private int timeSinceLastTask = 0;
 	private int numberOfRequestedTasks = 0;
+	
+	private Date jarDate;
 
 	public WorkerData() {
 		super();
@@ -47,6 +50,7 @@ public class WorkerData implements Serializable {
 		this.totalTimeSpentFarming = newWorkerData.getTotalTimeSpentFarming();
 		this.running = newWorkerData.running;
 		this.timeSinceLastTask = 0;
+		this.jarDate = newWorkerData.getJarDate();
 		
 	}
 
@@ -62,8 +66,6 @@ public class WorkerData implements Serializable {
 	public synchronized void decreaseNumberOfRequestedTasks() {
 		numberOfRequestedTasks--;
 	}
-
-
 
 	public synchronized void increaseTime() {
 		timeSinceLastTask++;
@@ -195,7 +197,15 @@ public class WorkerData implements Serializable {
 	public synchronized void setOperatingSystem(String operatingSystem) {
 		this.operatingSystem = operatingSystem;
 	}
+	
+	public synchronized Date getJarDate() {
+		return jarDate;
+	}
 
+	public synchronized void setJarDate(Date jarDate) {
+		this.jarDate = jarDate;
+	}
+	
 	@Override
 	public String toString() {
 		return "SlaveData [startTime=" + startTime + ", endTime=" + endTime
