@@ -1,9 +1,12 @@
 package masterserver;
 
+import helpers.BlackList;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.ServerSocket;
@@ -64,7 +67,7 @@ public class MasterServer {
 
 	private TaskScheduler taskScheduler = new TaskScheduler();
 	
-	private ArrayList<String> blackList = new ArrayList<String>();
+	private BlackList blackList;
 
 	public MasterServer(InfrastructureInformation infrastructureInformation) {
 		super();
@@ -74,20 +77,9 @@ public class MasterServer {
 		System.out.println(tmxb.getCurrentThreadUserTime());
 		System.out.println(tmxb.getDaemonThreadCount());
 		System.out.println("Version: Oct - 2014 - Evolve");
-		
-		File f = new File("blacklist.txt");
-		
-		try {
-			Scanner s = new Scanner(f);
-			
-			while(s.hasNextLine()) {
-				blackList.add(s.nextLine().trim());
-			}
-			
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
 
+		blackList  = new BlackList();
+		blackList.start();
 	}
 
 	public void execute() {
@@ -617,6 +609,7 @@ public class MasterServer {
 			}
 		}
 	}
+	
 	public void kickWorker(long idWorker) {
 		synchronized (workerThread) {
 			if (workerThread.containsKey(idWorker)) {
@@ -626,8 +619,25 @@ public class MasterServer {
 			}
 		}
 	}
+	
+	public void banWorker(long idWorker) {
+		synchronized (workerDataVector) {
+			if (workerDataVector.containsKey(idWorker)) {
+				WorkerData wd = workerDataVector.get(idWorker);
+				blackList.addToBlackList(wd.getWorkerAddress());
+			}
+		}
+	}
+	
+	public void saveNewBlackList(String newBlackList){
+		blackList.replaceBlackListContent(newBlackList);
+	}
 
-	public ArrayList<String> getBlackList() {
+	public void checkIfBanned(String ip){
+		blackList.checkIfBanned(ip);
+	}
+	
+	public BlackList getBlackList() {
 		return blackList;
 	}
 }

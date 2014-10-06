@@ -66,10 +66,6 @@ public class WorkerThread extends Thread implements Observer {
 			workerData = (WorkerData) in.readObject();
 			workerData.setWorkerAddress(socket.getInetAddress().toString());
 			
-			while(master.getBlackList().contains(workerData.getWorkerAddress())) {
-				Thread.sleep(10*60*1000);
-			}
-			
 			workerData.setStartTime(System.currentTimeMillis());
 			// System.out.println("SERVER ADDRESS: " +
 			// socket.getInetAddress().getHostAddress());
@@ -320,7 +316,7 @@ public class WorkerThread extends Thread implements Observer {
 						}
 						numberOfTasksToFeed--;
 					}
-		
+					master.checkIfBanned(workerData.getWorkerAddress());
 					taskDescription = master.getTask(workerData);
 					if (taskDescription == null) {
 						terminateWorker();

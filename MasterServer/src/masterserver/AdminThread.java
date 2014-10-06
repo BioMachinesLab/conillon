@@ -1,14 +1,18 @@
 package masterserver;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Scanner;
 
 import org.json.JSONArray;
 
@@ -73,6 +77,14 @@ public class AdminThread extends Thread {
 						}
 					}
 					break;
+				case BAN_WORKER:
+					idWorker = (Long) in.readObject();
+					master.banWorker(idWorker);
+					break;
+				case REFRESH_BANNED_LIST:			
+					String newBlacklist = (String) in.readObject();
+					master.saveNewBlackList(newBlacklist);
+					break;
 				default:
 					break;
 				}
@@ -115,6 +127,8 @@ public class AdminThread extends Thread {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+		
+		out.writeObject(master.getBlackList().getList());
 		
 		synchronized (workerDataVector) {
 			out.writeObject(workerDataVector);
