@@ -11,7 +11,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -22,6 +24,7 @@ import java.net.Socket;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -31,6 +34,8 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JApplet;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -57,9 +62,12 @@ public class Gui extends JApplet implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	// North
 	private JTextField inputWorker;
+	private JTextField inputWorkerIp;
 	private JTextField inputClient;
 	private JButton kickWorker;
 	private JButton killWorker;
+	private JButton banWorker;
+	private JButton editBannedWorkers;
 	private JButton kickClient;
 	private JLabel serverTime;
 
@@ -106,6 +114,8 @@ public class Gui extends JApplet implements ActionListener {
 	private int cores;
 	private int tasks;
 	private Date evolveJarDate;
+	
+	private ArrayList<String> masterBlackList;
 
 	public void init() {
 
@@ -194,7 +204,7 @@ public class Gui extends JApplet implements ActionListener {
 						ConnectionType ct = (ConnectionType) in.readObject();
 						switch (ct) {
 						case FULL_UPDATE:
-	
+							
 							int clientSelecteRow = jTableClient.getSelectedRow();
 							int workerSelecteRow = jTableWorker.getSelectedRow();
 							int mixedClientSelecteRow = jTableMixedClient.getSelectedRow();
@@ -209,6 +219,8 @@ public class Gui extends JApplet implements ActionListener {
 											.toString());
 							
 							evolveJarDate = (Date)in.readObject();
+							
+							masterBlackList = (ArrayList<String>) in.readObject();
 							
 							workerDataVector = (Hashtable<Long, WorkerData>) in
 									.readObject();
@@ -280,9 +292,12 @@ public class Gui extends JApplet implements ActionListener {
 									jTableMixedWorker.setRowSelectionInterval(
 											mixedWorkerSelecteRow, mixedWorkerSelecteRow);
 								}
-	
+								
 							} else {
 								workerKeys = null;
+//								System.out.println("No data on the vector let's clear the jTables");
+//								jTableWorker.repaint();
+//								jTableMixedWorker.repaint();
 							}
 							int numPending = 0;
 	
@@ -380,8 +395,10 @@ public class Gui extends JApplet implements ActionListener {
 		inputPanel.add(new JLabel(" ", SwingConstants.RIGHT));
 
 		inputWorker = new JTextField(5);
+		inputWorkerIp = new JTextField(5);
 		inputClient = new JTextField(5);
 		inputWorker.setEditable(false);
+		inputWorkerIp.setEditable(false);
 		inputClient.setEditable(false);
 
 		serverTime = new JLabel("                 ");
@@ -392,18 +409,38 @@ public class Gui extends JApplet implements ActionListener {
 		killWorker = new JButton("Kill Worker");
 		killWorker.addActionListener(this);
 
+		banWorker  = new JButton("Ban Worker");
+		banWorker.addActionListener(this);
+		
+		editBannedWorkers = new JButton("Edit Banned List");
+		editBannedWorkers.addActionListener(this);
+		
 		kickClient = new JButton("Kick Client");
 		kickClient.addActionListener(this);
-
+		
 		JPanel buttonPanel1 = new JPanel();
 		JPanel buttonPanel2 = new JPanel();
+		JPanel buttonPanel3 = new JPanel();
+		JPanel buttonPanel4 = new JPanel();
 
 		buttonPanel1.add(inputWorker);
+		buttonPanel1.add(inputWorkerIp);
 		buttonPanel1.add(kickWorker);
 		buttonPanel1.add(killWorker);
-
+		buttonPanel1.add(banWorker);
+		buttonPanel1.add(editBannedWorkers);
+		
 		buttonPanel2.add(inputClient);
 		buttonPanel2.add(kickClient);
+		
+		buttonPanel3.add(inputWorker);
+		buttonPanel3.add(kickWorker);
+		buttonPanel3.add(killWorker);
+		buttonPanel3.add(banWorker);
+		buttonPanel3.add(editBannedWorkers);
+		
+		buttonPanel4.add(inputClient);
+		buttonPanel4.add(kickClient);
 
 		workerTableModel = new WorkerTableModel();
 		clientTableModel = new ClientTableModel();
@@ -495,10 +532,10 @@ public class Gui extends JApplet implements ActionListener {
 		clients.add(buttonPanel2, BorderLayout.SOUTH);
 		clients.add(new JScrollPane(jTableClient));
 
-		mixedWorkers.add(buttonPanel1,BorderLayout.SOUTH);
+		mixedWorkers.add(buttonPanel3,BorderLayout.SOUTH);
 		mixedWorkers.add(new JScrollPane(jTableMixedWorker));
 		
-		mixedClients.add(buttonPanel2,BorderLayout.SOUTH);
+		mixedClients.add(buttonPanel4,BorderLayout.SOUTH);
 		mixedClients.add(new JScrollPane(jTableMixedClient));
 		
 		//Create a split pane with the two scroll panes in it.
@@ -509,9 +546,9 @@ public class Gui extends JApplet implements ActionListener {
 		mixed.add(splitPane);
 		
 		tabbedPane.addTab("Status", status);
-		tabbedPane.add("Workers", workers);
-		tabbedPane.add("Clients", clients);
-		tabbedPane.add("Mixed", mixed);
+//		tabbedPane.add("Workers", workers);
+//		tabbedPane.add("Clients", clients);
+		tabbedPane.add("Clients/Workers", mixed);
 
 		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
 		jTableWorker.addMouseListener(new MouseAdapter() {
@@ -520,8 +557,9 @@ public class Gui extends JApplet implements ActionListener {
 					Point p = e.getPoint();
 
 					int row = jTableWorker.rowAtPoint(p);
-					inputWorker.setText(jTableWorker.getValueAt(row, 0)
-							.toString());
+					if(jTableWorker.getRowCount() > row){
+						inputWorker.setText(jTableWorker.getValueAt(row, 0).toString());
+					}
 				}
 			}
 		});
@@ -532,9 +570,9 @@ public class Gui extends JApplet implements ActionListener {
 					Point p = e.getPoint();
 
 					int row = jTableClient.rowAtPoint(p);
-					inputClient.setText(jTableClient.getValueAt(row, 0)
-							.toString());
-
+					if(jTableClient.getRowCount() > row){
+						inputClient.setText(jTableClient.getValueAt(row, 0).toString());
+					}
 				}
 			}
 		});
@@ -547,8 +585,9 @@ public class Gui extends JApplet implements ActionListener {
 					Point p = e.getPoint();
 
 					int row = jTableMixedWorker.rowAtPoint(p);
-					inputWorker.setText(jTableMixedWorker.getValueAt(row, 0)
-							.toString());
+					if(jTableMixedWorker.getRowCount() > row){
+						inputWorker.setText(jTableMixedWorker.getValueAt(row, 0).toString());
+					}
 				}
 			}
 		});
@@ -559,9 +598,9 @@ public class Gui extends JApplet implements ActionListener {
 					Point p = e.getPoint();
 
 					int row = jTableMixedClient.rowAtPoint(p);
-					inputClient.setText(jTableMixedClient.getValueAt(row, 0)
-							.toString());
-
+					if(jTableMixedClient.getRowCount() > row){
+						inputClient.setText(jTableMixedClient.getValueAt(row, 0).toString());
+					}
 				}
 			}
 		});
@@ -662,9 +701,66 @@ public class Gui extends JApplet implements ActionListener {
 			String clientToKill = inputClient.getText();
 			if (!clientToKill.isEmpty())
 				killClient(Long.parseLong(clientToKill));
-
+			
+		}else if(source.equals(banWorker)){
+			String workerToKill = inputWorker.getText();
+			if (!workerToKill.isEmpty())
+				banWorker(Long.parseLong(workerToKill));
+			
+		}else if(source.equals(editBannedWorkers)){
+			//EDITAR A BLACKLIST
+			openFileInEditor(masterBlackList);
 		}
 	}
+
+	private void openFileInEditor(ArrayList<String> blackList) {
+		final JFrame frame = new JFrame("Black List Editor");
+		frame.setSize(800, 700);
+		frame.setResizable(true);
+		frame.getContentPane().setLayout(new BorderLayout());
+		frame.setLocationRelativeTo(null);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		JPanel northPanel = new JPanel();
+		northPanel.setLayout(new GridLayout(2,1));
+		frame.getContentPane().add(northPanel, BorderLayout.NORTH);
+		
+		JPanel editorPanel = new JPanel();
+		frame.getContentPane().add(editorPanel, BorderLayout.CENTER);
+		editorPanel.setLayout(new BorderLayout());
+		JPanel editorButtonPanel = new JPanel();
+
+		JButton saveButton = new JButton("Save");
+		editorButtonPanel.add(saveButton);
+		
+		editorPanel.add(editorButtonPanel, BorderLayout.NORTH);
+		final JEditorPane editPane = new JEditorPane();
+		editorPanel.add(new JScrollPane(editPane), BorderLayout.CENTER);
+		
+		saveButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent aE) {
+				String newBlackList = editPane.getText();
+				synchronized (out) {
+					try {
+						out.writeObject(ConnectionType.REFRESH_BANNED_LIST);
+						out.writeObject(newBlackList);
+						frame.dispose();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		String completeList = "";
+		for (String ip : blackList) {
+			completeList += ip + "\n";
+		}
+		
+		editPane.setText(completeList);
+		frame.setVisible(true);
+	}
+	
 	
 	private void kickWorker(long id) {
 		synchronized (out) {
@@ -681,6 +777,17 @@ public class Gui extends JApplet implements ActionListener {
 		synchronized (out) {
 			try {
 				out.writeObject(ConnectionType.KILL_WORKER);
+				out.writeObject(id);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void banWorker(long id) {
+		synchronized (out) {
+			try {
+				out.writeObject(ConnectionType.BAN_WORKER);
 				out.writeObject(id);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -803,16 +910,20 @@ public class Gui extends JApplet implements ActionListener {
 				}
 				return new WorkerStatus(color, lastRefresh);
 			case 13:
-				Color new_color;
+				Color newColor;
 				Date workerJarDate = (Date)workerData.getJarDate();
 				
-				if (workerJarDate.after(evolveJarDate)){
-					new_color = Color.GREEN;
+				if(masterBlackList.contains(workerData.getWorkerAddress())){
+					newColor = Color.BLACK;
 				}else{
-					new_color = Color.RED;
+					if (workerJarDate.after(evolveJarDate)){
+						newColor = Color.GREEN;
+					}else{
+						newColor = Color.RED;
+					}
 				}
 						
-				return new WorkerStatus(new_color);
+				return new WorkerStatus(newColor);
 			}
 			return "Unknown";
 		}
