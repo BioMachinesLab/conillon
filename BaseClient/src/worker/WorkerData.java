@@ -7,7 +7,7 @@ import comm.RunMode;
 
 public class WorkerData implements Serializable {
 
-	public static final int CONILLON_VERSION = 8;
+	public static final int CONILLON_VERSION = 9;
 
 	private long startTime;
 	private String endTime = "N/A";
