@@ -87,7 +87,6 @@ public class BlackList extends Thread {
 				e.printStackTrace();
 			}
 		}
-		System.out.println(ip + " UNBANNED!");
 	}
 	
 	private boolean isBanned(String ip){
