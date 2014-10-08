@@ -329,7 +329,7 @@ public class Gui extends JApplet implements ActionListener {
 								}
 								
 							} else {
-								clientKeys = null;
+								clientKeys = new Object[0];
 							}
 							
 							tasks = numPending;
@@ -860,6 +860,11 @@ public class Gui extends JApplet implements ActionListener {
 
 		@Override
 		public Object getValueAt(int y, int x) {
+			
+			if(workerKeys == null){
+				return null;
+			}
+			
 			WorkerData workerData = workerDataVector
 					.get(((Long) workerKeys[workerDataVector.size() - y - 1]));
 
@@ -1016,6 +1021,11 @@ public class Gui extends JApplet implements ActionListener {
 
 		@Override
 		public Object getValueAt(int y, int x) {
+			
+			if(clientKeys == null){
+				return null;
+			}
+			
 			ClientData clientData = clientDataVector
 					.get((Long) clientKeys[clientDataVector.size() - y - 1]);
 			switch (x) {
