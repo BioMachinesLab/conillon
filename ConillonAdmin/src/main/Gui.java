@@ -1022,7 +1022,7 @@ public class Gui extends JApplet implements ActionListener {
 		@Override
 		public Object getValueAt(int y, int x) {
 			
-			if(clientKeys == null){
+			if(clientKeys == null || clientKeys.length == 0){
 				return null;
 			}
 			
