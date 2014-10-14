@@ -63,6 +63,23 @@ public class BlackList extends Thread {
 		
 	}
 	
+	public void removeFromBlackList(String workerAddress){
+		PrintWriter printWriter = null;
+		list.remove(workerAddress);
+
+		try {
+			printWriter = new PrintWriter(file);
+			printWriter.write("");
+			for (String bl : list) {
+				printWriter.append(bl);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			printWriter.close ();
+		}
+	}
+	
 	public void replaceBlackListContent(String newList){
 		PrintWriter printWriter = null;
 		
@@ -87,6 +104,10 @@ public class BlackList extends Thread {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public boolean containsAddress(String workerAddress){
+		return list.contains(workerAddress);
 	}
 	
 	private boolean isBanned(String ip){

@@ -624,7 +624,13 @@ public class MasterServer {
 		synchronized (workerDataVector) {
 			if (workerDataVector.containsKey(idWorker)) {
 				WorkerData wd = workerDataVector.get(idWorker);
-				blackList.addToBlackList(wd.getWorkerAddress());
+				String workerAddress = wd.getWorkerAddress();
+				
+				if(blackList.containsAddress(workerAddress))
+					blackList.removeFromBlackList(workerAddress);
+				else
+					blackList.addToBlackList(workerAddress);
+				
 			}
 		}
 	}
