@@ -409,7 +409,7 @@ public class Gui extends JApplet implements ActionListener {
 		killWorker = new JButton("Kill Worker");
 		killWorker.addActionListener(this);
 
-		banWorker  = new JButton("Ban Worker");
+		banWorker  = new JButton("Ban/Unban Worker");
 		banWorker.addActionListener(this);
 		
 		editBannedWorkers = new JButton("Edit Banned List");
