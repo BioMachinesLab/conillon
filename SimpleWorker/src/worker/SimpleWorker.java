@@ -119,18 +119,6 @@ public class SimpleWorker extends Thread {
 			f.delete();
 		}
 		
-		f = new File(folderLocation+"minerd");
-		
-		if(f.exists()) {
-			System.out.println(f.exists());
-			for(File f2 : f.listFiles()) {
-				System.out.println(f2.exists());
-				f2.delete();
-				System.out.println(f2.exists());
-			}
-			f.delete();
-		}
-		
 		String os = System.getProperty("os.name");
 		
 		if(os.contains("Windows"))
@@ -143,25 +131,11 @@ public class SimpleWorker extends Thread {
 	}
 	
 	private void cleanUpLinux() {
-//		ProcessBuilder pb = new ProcessBuilder("killall","minerd");
-//		
-//		try {
-//			Process kill = pb.start();
-//			kill.waitFor();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
+		//Nothing to clean
 	}
 	
 	private void cleanUpWindows() {
-		ProcessBuilder pb = new ProcessBuilder("TaskKill","/F","/IM","minerd.exe");
-		
-		try {
-			Process kill = pb.start();
-			kill.waitFor();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		//Nothing to clean
 	}
 	
 	public static boolean wget(String url,String filename) throws IOException {
