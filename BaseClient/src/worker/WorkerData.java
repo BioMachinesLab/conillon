@@ -7,7 +7,7 @@ import comm.RunMode;
 
 public class WorkerData implements Serializable {
 
-	public static final int CONILLON_VERSION = 9;
+	public static final int CONILLON_VERSION = 10;
 
 	private long startTime;
 	private String endTime = "N/A";
@@ -25,6 +25,7 @@ public class WorkerData implements Serializable {
 								// unique ID
 	private int numberOfProcessors = 1;
 	private String operatingSystem = "N/A";
+	private String hostName = "N/A";
 	private RunMode runMode = RunMode.minimumWorkerLoad;
 
 	private int timeSinceLastTask = 0;
@@ -141,6 +142,10 @@ public class WorkerData implements Serializable {
 		return numberOfProcessors;
 	}
 
+	public String getHostName() {
+		return hostName;
+	}
+	
 	public String getOperatingSystem() {
 		return operatingSystem;
 	}
@@ -194,6 +199,10 @@ public class WorkerData implements Serializable {
 		this.numberOfProcessors = numberOfProcessors;
 	}
 
+	public void setHostName(String hostName) {
+		this.hostName = hostName;
+	}
+	
 	public synchronized void setOperatingSystem(String operatingSystem) {
 		this.operatingSystem = operatingSystem;
 	}
