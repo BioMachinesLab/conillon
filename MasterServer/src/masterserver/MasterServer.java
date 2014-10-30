@@ -1,27 +1,22 @@
 package masterserver;
 
 import helpers.BlackList;
+import helpers.RoomInformation;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Observable;
-import java.util.Scanner;
 import java.util.logging.Logger;
 
 import scheduler.TaskScheduler;
 import tasks.CompletedTask;
-import tasks.Task;
 import tasks.TaskDescription;
 import tasks.TaskStatus;
 import worker.ClassLoaderObjectInputStream;
@@ -68,6 +63,7 @@ public class MasterServer {
 	private TaskScheduler taskScheduler = new TaskScheduler();
 	
 	private BlackList blackList;
+	private RoomInformation roomsInformation;
 
 	public MasterServer(InfrastructureInformation infrastructureInformation) {
 		super();
@@ -78,8 +74,12 @@ public class MasterServer {
 		System.out.println(tmxb.getDaemonThreadCount());
 		System.out.println("Version: Oct - 2014 - Evolve");
 
+		
+		
 		blackList  = new BlackList();
 		blackList.start();
+		
+		roomsInformation = new RoomInformation();
 	}
 
 	public void execute() {
@@ -645,5 +645,9 @@ public class MasterServer {
 	
 	public BlackList getBlackList() {
 		return blackList;
+	}
+	
+	public RoomInformation getRoomInformation() {
+		return roomsInformation;
 	}
 }

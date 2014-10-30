@@ -130,6 +130,8 @@ public class AdminThread extends Thread {
 		
 		out.writeObject(master.getBlackList().getList());
 		
+		out.writeObject(master.getRoomInformation().getRooms());
+		
 		synchronized (workerDataVector) {
 			out.writeObject(workerDataVector);
 			out.reset();
