@@ -116,6 +116,7 @@ public class Gui extends JApplet implements ActionListener {
 	private Date evolveJarDate;
 	
 	private ArrayList<String> masterBlackList;
+	private HashMap<String,ArrayList<String>> roomsHostNames;
 
 	public void init() {
 
@@ -221,6 +222,8 @@ public class Gui extends JApplet implements ActionListener {
 							evolveJarDate = (Date)in.readObject();
 							
 							masterBlackList = (ArrayList<String>) in.readObject();
+							
+							roomsHostNames = (HashMap<String,ArrayList<String>>) in.readObject();
 							
 							workerDataVector = (Hashtable<Long, WorkerData>) in
 									.readObject();
@@ -549,6 +552,7 @@ public class Gui extends JApplet implements ActionListener {
 //		tabbedPane.add("Workers", workers);
 //		tabbedPane.add("Clients", clients);
 		tabbedPane.add("Clients/Workers", mixed);
+		
 
 		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
 		jTableWorker.addMouseListener(new MouseAdapter() {
@@ -837,7 +841,9 @@ public class Gui extends JApplet implements ActionListener {
 			case 4:
 				return "O.S.";
 			case 5:
-				return "Farming Time";
+				return "Host Name";
+//			case 6:
+//				return "Farming Time";
 			case 6:
 				return "Tasks Processed";
 			case 7:
@@ -880,16 +886,18 @@ public class Gui extends JApplet implements ActionListener {
 			case 4:
 				return workerData.getOperatingSystem();
 			case 5:
-				Time time = new Time(
-						(long) workerData.getTotalTimeSpentFarming() - 3600000);
-				return time.toString();
+				return workerData.getHostName();
+//			case 6:
+//				Time time = new Time(
+//						(long) workerData.getTotalTimeSpentFarming() - 3600000);
+//				return time.toString();
 			case 6:
 				return workerData.getNumberOfTasksProcessed();
 			case 7:
 				return ((long) workerData.getAverageTimePerTask()) / 1000.0
 						+ " s";
 			case 8:
-				time = new Time(currentServerTime
+				Time time = new Time(currentServerTime
 						- (long) workerData.getStartTime() - 3600000);
 				return time.toString();
 			case 9:
@@ -987,7 +995,7 @@ public class Gui extends JApplet implements ActionListener {
 
 		@Override
 		public int getColumnCount() {
-			return 9;
+			return 8;
 		}
 
 		@Override
@@ -1003,17 +1011,17 @@ public class Gui extends JApplet implements ActionListener {
 				return "IP";
 			case 2:
 				return "Desc";
+//			case 3:
+//				return "Priority";
 			case 3:
-				return "Priority";
-			case 4:
 				return "Running Time";
-			case 5:
+			case 4:
 				return "Average Speed";
-			case 6:
+			case 5:
 				return "Task Counter";
-			case 7:
+			case 6:
 				return "Tasks Done";
-			case 8:
+			case 7:
 				return "ETA";
 			}
 			return "Unknown";
@@ -1035,19 +1043,19 @@ public class Gui extends JApplet implements ActionListener {
 				return clientData.getIpAdress();
 			case 2:
 				return clientData.getDesc();
+//			case 3:
+//				return clientData.getClientPriority();
 			case 3:
-				return clientData.getClientPriority();
-			case 4:
 				return new Time(currentServerTime - clientData.getStartTime()
 						- 3600000);
-			case 5:
+			case 4:
 				return (int) (clientData.getTotalNumberOfTasksDone()
 						/ ((currentServerTime - clientData.getStartTime()) / 1000.0) * 1000) / 1000.0;
-			case 6:
+			case 5:
 				return clientData.getTaskCounter();
-			case 7:
+			case 6:
 				return clientData.getTotalNumberOfTasksDone();
-			case 8:
+			case 7:
 				int eta = (int) ((clientData.getTotalNumberOfTasks() - clientData
 						.getTotalNumberOfTasksDone())
 						/ (clientData.getTotalNumberOfTasksDone()
