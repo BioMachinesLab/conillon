@@ -303,6 +303,7 @@ public class Worker {
 			localhostinfo = new SystemInformation(numberOfProcessors,
 					operatingSystem, InetAddress.getLocalHost());
 			out.println(localhostinfo.toString());
+			this.workerData.setHostName(InetAddress.getLocalHost().getHostName());
 			this.workerData.setOperatingSystem(operatingSystem);
 			this.workerData.setWorkerAddress(InetAddress.getLocalHost()
 					.toString());
