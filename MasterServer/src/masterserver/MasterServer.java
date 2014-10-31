@@ -80,6 +80,7 @@ public class MasterServer {
 		blackList.start();
 		
 		roomsInformation = new RoomInformation();
+		roomsInformation.start();
 	}
 
 	public void execute() {
