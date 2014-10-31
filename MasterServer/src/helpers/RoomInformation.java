@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
-public class RoomInformation {
+public class RoomInformation extends Thread {
 
 	private File file;
 	private HashMap<String,ArrayList<String>> rooms;
@@ -14,7 +14,18 @@ public class RoomInformation {
 	public RoomInformation() {
 		file = new File("hostnames.txt");
 		rooms = new HashMap<String, ArrayList<String>>();
-		readHostFromFile();
+	}
+	
+	@Override
+	public void run() {
+		while(true){
+			try {
+				readHostFromFile();
+				sleep(10*60*1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private void readHostFromFile(){
