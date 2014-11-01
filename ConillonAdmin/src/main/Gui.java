@@ -11,9 +11,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -22,22 +19,20 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.Socket;
 import java.sql.Time;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JApplet;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -53,8 +48,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+import utils.RoomHostInformation;
 import worker.WorkerData;
 import client.ClientData;
+
 import comm.ConnectionType;
 
 public class Gui extends JApplet implements ActionListener {
@@ -87,6 +84,7 @@ public class Gui extends JApplet implements ActionListener {
 
 	WorkerTableModel workerTableModel;
 	ClientTableModel clientTableModel;
+	RoomsTableModel roomsTableModel;
 
 	private Object[] workerKeys;
 	private Object[] clientKeys;
@@ -100,6 +98,7 @@ public class Gui extends JApplet implements ActionListener {
 	private JTable jTableClient;
 	private JTable jTableMixedWorker;
 	private JTable jTableMixedClient;
+	private JTable jTableRooms;
 	
 	JTabbedPane tabbedPane = new JTabbedPane();
 
@@ -116,8 +115,15 @@ public class Gui extends JApplet implements ActionListener {
 	private Date evolveJarDate;
 	
 	private ArrayList<String> masterBlackList;
-	private HashMap<String,ArrayList<String>> roomsHostNames;
-
+	
+	private HashMap<String,ArrayList<String>> hashHostnames;
+	private HashMap<String,ArrayList<String>> backupHashHostnames= new HashMap<String, ArrayList<String>>();
+	private ArrayList<RoomHostInformation> hostsInformation = new ArrayList<RoomHostInformation>();
+	private ArrayList<String> selectedRooms = new ArrayList<String>();
+	
+	private JPanel roomsCheckBoxPanel;
+	JLabel activeWorkerslabel = new JLabel();
+	
 	public void init() {
 
 		gui();
@@ -223,7 +229,7 @@ public class Gui extends JApplet implements ActionListener {
 							
 							masterBlackList = (ArrayList<String>) in.readObject();
 							
-							roomsHostNames = (HashMap<String,ArrayList<String>>) in.readObject();
+							hashHostnames = (HashMap<String,ArrayList<String>>) in.readObject();
 							
 							workerDataVector = (Hashtable<Long, WorkerData>) in
 									.readObject();
@@ -296,6 +302,18 @@ public class Gui extends JApplet implements ActionListener {
 											mixedWorkerSelecteRow, mixedWorkerSelecteRow);
 								}
 								
+								if(!backupHashHostnames.equals(hashHostnames)){
+									createRoomPanelNorth();
+									backupHashHostnames = hashHostnames;
+								}
+								
+								roomsTableModel.fireTableDataChanged();
+								if(selectedRooms.isEmpty()){
+									updateJRoomsList(new ArrayList<String>(hashHostnames.keySet()));
+								}else{
+									updateJRoomsList(selectedRooms);
+								}
+								
 							} else {
 								workerKeys = null;
 //								System.out.println("No data on the vector let's clear the jTables");
@@ -330,7 +348,7 @@ public class Gui extends JApplet implements ActionListener {
 									jTableMixedClient.setRowSelectionInterval(
 											mixedClientSelecteRow, mixedClientSelecteRow);
 								}
-								
+									
 							} else {
 								clientKeys = new Object[0];
 							}
@@ -361,6 +379,77 @@ public class Gui extends JApplet implements ActionListener {
 			}
 		}
 
+		private void createRoomPanelNorth() {
+			for (String key : hashHostnames.keySet()) {
+				JPanel panel = new JPanel();
+				JLabel roomLabel = new JLabel(key);
+				JCheckBox checkBox = new JCheckBox();
+				checkBox.addActionListener(new CheckBoxListener(roomLabel.getText()));
+				panel.add(roomLabel);
+				panel.add(checkBox);
+				roomsCheckBoxPanel.add(panel);
+			}
+		}
+		
+		private void updateJRoomsList(ArrayList<String> rooms){
+			int numberOfActiveWorkers = 0;
+			hostsInformation.clear();
+			
+			for (String room : rooms) {
+				for (String hostname : hashHostnames.get(room)) {
+					RoomHostInformation info = new RoomHostInformation();
+					info.setRoom(room);
+					info.setHostname(hostname);
+					for (WorkerData wD : workerData.values()) {
+						if(wD.getHostName().equals(hostname)){
+							info.setAddress(wD.getWorkerAddress());
+							info.setConnected(true);
+							if(masterBlackList.contains(wD.getWorkerAddress())){
+								info.setBanned(true);
+							}else{
+								numberOfActiveWorkers++;
+							}
+							break;
+						}
+						info.setAddress("unknown");
+						info.setConnected(false);
+						info.setBanned(false);
+					}
+					hostsInformation.add(info);
+				}
+			}
+			
+			DecimalFormat fmt = new DecimalFormat("0.00");
+			double activeWorkersPercentage = numberOfActiveWorkers/(double)hostsInformation.size() * 100;
+			activeWorkerslabel.setText("Percentage of Active Workers: " + fmt.format(activeWorkersPercentage) + "% (" + numberOfActiveWorkers + "/" + hostsInformation.size() + ")");
+		}
+		
+		private class CheckBoxListener implements ActionListener{
+			private String room;
+			
+			public CheckBoxListener(String room) {
+				this.room = room;
+			}
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JCheckBox currentCheckbox = (JCheckBox) e.getSource();
+				if(currentCheckbox.isSelected()){
+					selectedRooms.add(room);
+				}else{
+					selectedRooms.remove(room);
+				}
+				
+				if(selectedRooms.isEmpty()){
+					updateJRoomsList(new ArrayList<String>(hashHostnames.keySet()));
+				}else{
+					updateJRoomsList(selectedRooms);
+				}
+				
+				roomsTableModel.fireTableDataChanged();
+			}
+		}
+		
 		private class TimeToUpdate extends Thread {
 
 			public TimeToUpdate() {
@@ -447,6 +536,7 @@ public class Gui extends JApplet implements ActionListener {
 
 		workerTableModel = new WorkerTableModel();
 		clientTableModel = new ClientTableModel();
+		roomsTableModel = new RoomsTableModel();
 		jTableWorker = new JTable(workerTableModel);
 		jTableWorker.setAutoCreateRowSorter(true);
 		jTableClient = new JTable(clientTableModel);
@@ -456,6 +546,8 @@ public class Gui extends JApplet implements ActionListener {
 		jTableMixedWorker.setAutoCreateRowSorter(true);
 		jTableMixedClient = new JTable(clientTableModel);
 		jTableMixedClient.setAutoCreateRowSorter(true);
+		jTableRooms = new JTable(roomsTableModel);
+		jTableRooms.setAutoCreateRowSorter(true);
 		
 		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(
 				jTableWorker.getModel());
@@ -528,6 +620,7 @@ public class Gui extends JApplet implements ActionListener {
 		JPanel mixed = new JPanel(new BorderLayout());
 		JPanel mixedWorkers = new JPanel(new BorderLayout());
 		JPanel mixedClients = new JPanel(new BorderLayout());
+		JPanel roomsPanel = new JPanel(new BorderLayout());
 		
 		workers.add(buttonPanel1, BorderLayout.SOUTH);
 		workers.add(new JScrollPane(jTableWorker));
@@ -548,11 +641,22 @@ public class Gui extends JApplet implements ActionListener {
 				
 		mixed.add(splitPane);
 		
+		JPanel northPanel = new JPanel(new BorderLayout());
+		JPanel northPanelBottom = new JPanel();
+		roomsCheckBoxPanel = new JPanel();
+		northPanelBottom.add(activeWorkerslabel);
+		northPanel.add(roomsCheckBoxPanel);
+		northPanel.add(northPanelBottom, BorderLayout.SOUTH);
+		roomsPanel.add(northPanel, BorderLayout.NORTH);
+		roomsPanel.add(new JScrollPane(jTableRooms));
+		
 		tabbedPane.addTab("Status", status);
 //		tabbedPane.add("Workers", workers);
 //		tabbedPane.add("Clients", clients);
 		tabbedPane.add("Clients/Workers", mixed);
+		tabbedPane.add("Rooms",roomsPanel);
 		
+		jTableRooms.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
 
 		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
 		jTableWorker.addMouseListener(new MouseAdapter() {
@@ -867,7 +971,7 @@ public class Gui extends JApplet implements ActionListener {
 		@Override
 		public Object getValueAt(int y, int x) {
 			
-			if(workerKeys == null){
+			if(workerKeys == null || workerKeys.length == 0){
 				return null;
 			}
 			
@@ -1065,6 +1169,80 @@ public class Gui extends JApplet implements ActionListener {
 			}
 			return "Unknown";
 		}
+	}
+	
+	class RoomsTableModel extends AbstractTableModel {
+
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public int getColumnCount() {
+			return 4;
+		}
+
+		@Override
+		public int getRowCount() {
+			return hostsInformation.size();
+		}
+
+		public String getColumnName(int x) {
+			switch (x) {
+			case 0:
+				return "Sala";
+			case 1:
+				return "Hostname";
+			case 2:
+				return "IP";
+			case 3:
+				return "Connected";
+			}
+			return "Unknown";
+		}
+
+		@Override
+		public Object getValueAt(int y, int x) {
+			
+			if(hostsInformation == null || hostsInformation.isEmpty()){
+				return null;
+			}
+			
+			RoomHostInformation hostInfo = hostsInformation.get(y);
+			
+			switch (x) {
+				case 0:
+					return hostInfo.getRoom();
+				case 1:
+					return hostInfo.getHostname();
+				case 2:
+					return hostInfo.getAddress();
+				case 3:
+					Color newColor;
+					
+					if(hostInfo.isBanned()){
+						newColor = Color.BLACK;
+					}else{
+						if (hostInfo.isConnected()){
+							newColor = Color.GREEN;
+						}else{
+							newColor = Color.RED;
+						}
+					}
+					return new WorkerStatus(newColor);
+			}
+			
+			return "Unknown";
+		}
+		
+		public Class getColumnClass(int c) {
+			if(getValueAt(0, c) != null)
+				return getValueAt(0, c).getClass(); 
+			else{
+				//Return this just to avoid NullPointException
+				return WorkerStatus.class;
+			}
+			
+		}
+		
 	}
 	
 	public double getSpeed() {
