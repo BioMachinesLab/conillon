@@ -302,23 +302,8 @@ public class Gui extends JApplet implements ActionListener {
 											mixedWorkerSelecteRow, mixedWorkerSelecteRow);
 								}
 								
-								if(!backupHashHostnames.equals(hashHostnames)){
-									createRoomPanelNorth();
-									backupHashHostnames = hashHostnames;
-								}
-								
-								roomsTableModel.fireTableDataChanged();
-								if(selectedRooms.isEmpty()){
-									updateJRoomsList(new ArrayList<String>(hashHostnames.keySet()));
-								}else{
-									updateJRoomsList(selectedRooms);
-								}
-								
 							} else {
 								workerKeys = null;
-//								System.out.println("No data on the vector let's clear the jTables");
-//								jTableWorker.repaint();
-//								jTableMixedWorker.repaint();
 							}
 							int numPending = 0;
 	
@@ -353,6 +338,21 @@ public class Gui extends JApplet implements ActionListener {
 								clientKeys = new Object[0];
 							}
 							
+							if(!backupHashHostnames.equals(hashHostnames)){
+								createRoomPanelNorth();
+								backupHashHostnames = hashHostnames;
+							}
+							
+							if (hashHostnames.keySet() != null
+									&& !hashHostnames.keySet().isEmpty()) {
+								roomsTableModel.fireTableDataChanged();
+								if(selectedRooms.isEmpty()){
+									updateJRoomsList(new ArrayList<String>(hashHostnames.keySet()));
+								}else{
+									updateJRoomsList(selectedRooms);
+								}
+							}
+							
 							tasks = numPending;
 	
 							pendingGraph.addData((double)numPending);
@@ -380,6 +380,7 @@ public class Gui extends JApplet implements ActionListener {
 		}
 
 		private void createRoomPanelNorth() {
+			roomsCheckBoxPanel.removeAll();
 			for (String key : hashHostnames.keySet()) {
 				JPanel panel = new JPanel();
 				JLabel roomLabel = new JLabel(key);
@@ -1240,7 +1241,6 @@ public class Gui extends JApplet implements ActionListener {
 				//Return this just to avoid NullPointException
 				return WorkerStatus.class;
 			}
-			
 		}
 		
 	}
