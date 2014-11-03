@@ -32,6 +32,7 @@ public class RoomInformation extends Thread {
 		Scanner scanner = null;
 		try {
 			scanner = new Scanner(file);
+			rooms.clear();
 			String room ="";
 			ArrayList<String> hosts = new ArrayList<String>();
 			
