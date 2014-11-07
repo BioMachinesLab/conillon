@@ -345,12 +345,12 @@ public class Gui extends JApplet implements ActionListener {
 							
 							if (hashHostnames.keySet() != null
 									&& !hashHostnames.keySet().isEmpty()) {
-								roomsTableModel.fireTableDataChanged();
 								if(selectedRooms.isEmpty()){
 									updateJRoomsList(new ArrayList<String>(hashHostnames.keySet()));
 								}else{
 									updateJRoomsList(selectedRooms);
 								}
+								roomsTableModel.fireTableDataChanged();
 							}
 							
 							tasks = numPending;
@@ -401,7 +401,7 @@ public class Gui extends JApplet implements ActionListener {
 					RoomHostInformation info = new RoomHostInformation();
 					info.setRoom(room);
 					info.setHostname(hostname);
-					for (WorkerData wD : workerData.values()) {
+					for (WorkerData wD : workerDataVector.values()) {
 						if(wD.getHostName().equals(hostname)){
 							info.setAddress(wD.getWorkerAddress());
 							info.setConnected(true);
