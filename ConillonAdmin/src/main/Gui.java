@@ -402,7 +402,7 @@ public class Gui extends JApplet implements ActionListener {
 					info.setRoom(room);
 					info.setHostname(hostname);
 					for (WorkerData wD : workerDataVector.values()) {
-						if(wD.getHostName().equals(hostname)){
+						if(wD.getHostName().toLowerCase().equals(hostname.toLowerCase())){
 							info.setAddress(wD.getWorkerAddress());
 							info.setConnected(true);
 							if(masterBlackList.contains(wD.getWorkerAddress())){
