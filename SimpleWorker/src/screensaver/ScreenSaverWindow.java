@@ -79,7 +79,7 @@ public class ScreenSaverWindow extends JFrame implements Runnable {
 //			WorkerData wd = worker.getWorkerData();
 //			if(wd!=null){
 			g2d.setFont(fontStatus);
-			g2d.drawString("ISCTE-IUL Conilon Screensaver",(int)(width*rand.nextDouble()),(int)(height*rand.nextDouble()));
+			g2d.drawString("ISCTE-IUL Conillon Screensaver",(int)(width*rand.nextDouble()),(int)(height*rand.nextDouble()));
 //			g2d.drawString("Number of Tasks Processed: "+(nTasks+wd.getNumberOfTasksProcessed()), (int)(width*rand.nextDouble()),(int)(height*rand.nextDouble()));
 //			}
 		}
