@@ -21,7 +21,7 @@ public class RoomInformation extends Thread {
 		while(true){
 			try {
 				readHostFromFile();
-				sleep(10*60*1000);
+				Thread.sleep(10*60*1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -63,5 +63,4 @@ public class RoomInformation extends Thread {
 	public HashMap<String, ArrayList<String>> getRooms() {
 		return rooms;
 	}
-
 }

@@ -23,7 +23,7 @@ public class BlackList extends Thread {
 		while(true){
 			try {
 				readFromFile(file);
-				sleep(10*60*1000);
+				Thread.sleep(10*60*1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -62,7 +62,8 @@ public class BlackList extends Thread {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} finally {
-			printWriter.close ();
+			if(printWriter != null)
+				printWriter.close();
 		}
 		
 	}
@@ -80,7 +81,7 @@ public class BlackList extends Thread {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} finally {
-			printWriter.close ();
+			printWriter.close();
 		}
 	}
 	
@@ -93,7 +94,7 @@ public class BlackList extends Thread {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} finally {
-			printWriter.close ();
+			printWriter.close();
 			readFromFile(file);
 		}
 		
@@ -114,12 +115,11 @@ public class BlackList extends Thread {
 		return list.contains(workerAddress);
 	}
 	
-	private boolean isBanned(String ip){
+	private synchronized boolean isBanned(String ip){
 		return list.contains(ip);
 	}
 	
 	public ArrayList<String> getList() {
 		return list;
-	}
-	
+	}	
 }

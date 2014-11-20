@@ -404,10 +404,8 @@ public class WorkerThread extends Thread implements Observer {
 						taskIterator.remove();
 //						workerData.decreaseNumberOfRequestedTasks();
 					}
-
 				}
 			}
-
 		}
 	}
 }

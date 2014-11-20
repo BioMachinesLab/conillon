@@ -58,7 +58,6 @@ public class AdminThread extends Thread {
 				switch (type) {
 				case FULL_UPDATE:
 					fullUpdate();
-
 					break;
 				case KILL_WORKER:
 					idWorker = (Long) in.readObject();
@@ -115,7 +114,7 @@ public class AdminThread extends Thread {
 	}
 
 	private void fullUpdate() throws IOException {
-		JSONArray jsonArray;
+		out.reset();
 		out.writeObject(ConnectionType.FULL_UPDATE);
 		out.writeObject(new Long(System.currentTimeMillis()));
 		
@@ -134,12 +133,9 @@ public class AdminThread extends Thread {
 		
 		synchronized (workerDataVector) {
 			out.writeObject(workerDataVector);
-			out.reset();
 		}
 		synchronized (clientDataVector) {
 			out.writeObject(clientDataVector);
-			out.reset();
 		}
- 
 	}
 }
