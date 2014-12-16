@@ -21,9 +21,9 @@ import java.net.Socket;
 import java.sql.Time;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -44,19 +44,20 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
 
 import utils.RoomHostInformation;
 import worker.WorkerData;
 import client.ClientData;
-
 import comm.ConnectionType;
 
 public class Gui extends JApplet implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
+	private static final long UPDATE_TIME = 3000;
+	
 	// North
 	private JTextField inputWorker;
 	private JTextField inputWorkerIp;
@@ -94,8 +95,8 @@ public class Gui extends JApplet implements ActionListener {
 
 	private long currentTime;
 	private Long currentServerTime;
-	private JTable jTableWorker;
-	private JTable jTableClient;
+//	private JTable jTableWorker;
+//	private JTable jTableClient;
 	private JTable jTableMixedWorker;
 	private JTable jTableMixedClient;
 	private JTable jTableRooms;
@@ -112,7 +113,7 @@ public class Gui extends JApplet implements ActionListener {
 	private int idle;
 	private int cores;
 	private int tasks;
-	private Date evolveJarDate;
+	private long evolveJarDate;
 	
 	private ArrayList<String> masterBlackList;
 	
@@ -189,7 +190,6 @@ public class Gui extends JApplet implements ActionListener {
 	private class Listener extends Thread {
 
 		private Socket socket;
-		private int time = 3000;
 		private int lastProcessed = 0;
 		private double alpha = 2.0 / (20 + 1);
 		private double speedEMA20 = 0;
@@ -212,8 +212,8 @@ public class Gui extends JApplet implements ActionListener {
 						switch (ct) {
 						case FULL_UPDATE:
 							
-							int clientSelecteRow = jTableClient.getSelectedRow();
-							int workerSelecteRow = jTableWorker.getSelectedRow();
+//							int clientSelecteRow = jTableClient.getSelectedRow();
+//							int workerSelecteRow = jTableWorker.getSelectedRow();
 							int mixedClientSelecteRow = jTableMixedClient.getSelectedRow();
 							int mixedWorkerSelecteRow = jTableMixedWorker.getSelectedRow();
 	
@@ -225,7 +225,7 @@ public class Gui extends JApplet implements ActionListener {
 									+ new Time(currentServerTime - 3600000)
 											.toString());
 							
-							evolveJarDate = (Date)in.readObject();
+							evolveJarDate = (Long) in.readObject();
 							
 							masterBlackList = (ArrayList<String>) in.readObject();
 							
@@ -288,12 +288,12 @@ public class Gui extends JApplet implements ActionListener {
 								
 								lastProcessed = totalProcessed;
 								workerTableModel.fireTableDataChanged();
-								if (workerSelecteRow >= 0
-										&& workerSelecteRow < workerTableModel
-												.getRowCount()) {
-									jTableWorker.setRowSelectionInterval(
-											workerSelecteRow, workerSelecteRow);
-								}
+//								if (workerSelecteRow >= 0
+//										&& workerSelecteRow < workerTableModel
+//												.getRowCount()) {
+//									jTableWorker.setRowSelectionInterval(
+//											workerSelecteRow, workerSelecteRow);
+//								}
 								
 								if (mixedWorkerSelecteRow >= 0
 										&& mixedWorkerSelecteRow < workerTableModel
@@ -320,12 +320,12 @@ public class Gui extends JApplet implements ActionListener {
 	
 								clientTableModel.fireTableDataChanged();
 	
-								if (clientSelecteRow >= 0
-										&& clientSelecteRow < clientTableModel
-												.getRowCount()) {
-									jTableClient.setRowSelectionInterval(
-											clientSelecteRow, clientSelecteRow);
-								}
+//								if (clientSelecteRow >= 0
+//										&& clientSelecteRow < clientTableModel
+//												.getRowCount()) {
+//									jTableClient.setRowSelectionInterval(
+//											clientSelecteRow, clientSelecteRow);
+//								}
 								
 								if (mixedClientSelecteRow >= 0
 										&& mixedClientSelecteRow < clientTableModel
@@ -469,7 +469,7 @@ public class Gui extends JApplet implements ActionListener {
 						e.printStackTrace();
 					}
 					try {
-						Thread.sleep(time);
+						Thread.sleep(UPDATE_TIME);
 					} catch (InterruptedException e) {
 						connected = false;
 						e.printStackTrace();
@@ -538,23 +538,24 @@ public class Gui extends JApplet implements ActionListener {
 		workerTableModel = new WorkerTableModel();
 		clientTableModel = new ClientTableModel();
 		roomsTableModel = new RoomsTableModel();
-		jTableWorker = new JTable(workerTableModel);
-		jTableWorker.setAutoCreateRowSorter(true);
-		jTableClient = new JTable(clientTableModel);
-		jTableClient.setAutoCreateRowSorter(true);
+//		jTableWorker = new JTable(workerTableModel);
+//		jTableWorker.setAutoCreateRowSorter(true);
+//		jTableClient = new JTable(clientTableModel);
+//		jTableClient.setAutoCreateRowSorter(true);
 	
 		jTableMixedWorker = new JTable(workerTableModel);
 		jTableMixedWorker.setAutoCreateRowSorter(true);
+		
 		jTableMixedClient = new JTable(clientTableModel);
 		jTableMixedClient.setAutoCreateRowSorter(true);
 		jTableRooms = new JTable(roomsTableModel);
 		jTableRooms.setAutoCreateRowSorter(true);
 		
-		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(
-				jTableWorker.getModel());
-		jTableWorker.setRowSorter(sorter);
-
-		jTableWorker.setShowGrid(true);
+//		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(
+//				jTableWorker.getModel());
+//		jTableWorker.setRowSorter(sorter);
+//
+//		jTableWorker.setShowGrid(true);
 
 		JPanel buttonPanelNorth = new JPanel();
 
@@ -568,9 +569,9 @@ public class Gui extends JApplet implements ActionListener {
 		averageSystemSpeed = new JLabel("   ");
 		
 		buttonPanelNorth.add(serverTime);
-		buttonPanelNorth.add(new JLabel(" N Workers:"));
+		buttonPanelNorth.add(new JLabel(" Workers:"));
 		buttonPanelNorth.add(numberOfWorkers);
-		buttonPanelNorth.add(new JLabel(" N Clients:"));
+		buttonPanelNorth.add(new JLabel(" Clients:"));
 		buttonPanelNorth.add(numberOfClients);
 		buttonPanelNorth.add(new JLabel(" Processed Tasks:"));
 		buttonPanelNorth.add(numberOfProcessedTasks);
@@ -592,14 +593,14 @@ public class Gui extends JApplet implements ActionListener {
 		JPanel cores = new JPanel(new BorderLayout());
 		cores.add(
 				makeTimeRangeButtons(coresGraph,
-						"Number of available cores   -   "), BorderLayout.NORTH);
+						"Available cores   -   "), BorderLayout.NORTH);
 		cores.add(coresGraph);
 		graphs.add(cores);
 		cores.setBorder(BorderFactory.createLoweredBevelBorder());
 
 		JPanel idle = new JPanel(new BorderLayout());
 		idle.add(
-				makeTimeRangeButtons(idleGraph, "Number of idle cores   -   "),
+				makeTimeRangeButtons(idleGraph, "Idle cores   -   "),
 				BorderLayout.NORTH);
 		idle.add(idleGraph);
 		graphs.add(idle);
@@ -609,25 +610,25 @@ public class Gui extends JApplet implements ActionListener {
 
 		pending.add(
 				makeTimeRangeButtons(pendingGraph,
-						"Number of tasks ready to be done   -   "),
+						"Pending Tasks   -   "),
 				BorderLayout.NORTH);
 		pending.add(pendingGraph);
 		graphs.add(pending);
 		
 		pending.setBorder(BorderFactory.createLoweredBevelBorder());
 
-		JPanel workers = new JPanel(new BorderLayout());
-		JPanel clients = new JPanel(new BorderLayout());
+//		JPanel workers = new JPanel(new BorderLayout());
+//		JPanel clients = new JPanel(new BorderLayout());
 		JPanel mixed = new JPanel(new BorderLayout());
 		JPanel mixedWorkers = new JPanel(new BorderLayout());
 		JPanel mixedClients = new JPanel(new BorderLayout());
 		JPanel roomsPanel = new JPanel(new BorderLayout());
 		
-		workers.add(buttonPanel1, BorderLayout.SOUTH);
-		workers.add(new JScrollPane(jTableWorker));
-
-		clients.add(buttonPanel2, BorderLayout.SOUTH);
-		clients.add(new JScrollPane(jTableClient));
+//		workers.add(buttonPanel1, BorderLayout.SOUTH);
+//		workers.add(new JScrollPane(jTableWorker));
+//
+//		clients.add(buttonPanel2, BorderLayout.SOUTH);
+//		clients.add(new JScrollPane(jTableClient));
 
 		mixedWorkers.add(buttonPanel3,BorderLayout.SOUTH);
 		mixedWorkers.add(new JScrollPane(jTableMixedWorker));
@@ -658,35 +659,55 @@ public class Gui extends JApplet implements ActionListener {
 		tabbedPane.add("Rooms",roomsPanel);
 		
 		jTableRooms.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		jTableRooms.setDefaultRenderer(String.class, centerRenderer);
+		jTableRooms.setDefaultRenderer(Double.class, centerRenderer);
+		jTableRooms.setDefaultRenderer(Integer.class, centerRenderer);
+		jTableRooms.setDefaultRenderer(Long.class, centerRenderer);
+		
+		JTableHeader roomsHeader = jTableRooms.getTableHeader();
+		TableCellRenderer roomsRenderer = roomsHeader.getDefaultRenderer();
+		JLabel roomsHeaderLabel = (JLabel) roomsRenderer;
+		roomsHeaderLabel.setHorizontalAlignment(JLabel.CENTER);
 
-		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
-		jTableWorker.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (SwingUtilities.isLeftMouseButton(e)) {
-					Point p = e.getPoint();
-
-					int row = jTableWorker.rowAtPoint(p);
-					if(jTableWorker.getRowCount() > row){
-						inputWorker.setText(jTableWorker.getValueAt(row, 0).toString());
-					}
-				}
-			}
-		});
-
-		jTableClient.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (SwingUtilities.isLeftMouseButton(e)) {
-					Point p = e.getPoint();
-
-					int row = jTableClient.rowAtPoint(p);
-					if(jTableClient.getRowCount() > row){
-						inputClient.setText(jTableClient.getValueAt(row, 0).toString());
-					}
-				}
-			}
-		});
+//		jTableWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
+//		jTableWorker.addMouseListener(new MouseAdapter() {
+//			public void mouseClicked(MouseEvent e) {
+//				if (SwingUtilities.isLeftMouseButton(e)) {
+//					Point p = e.getPoint();
+//
+//					int row = jTableWorker.rowAtPoint(p);
+//					if(jTableWorker.getRowCount() > row){
+//						inputWorker.setText(jTableWorker.getValueAt(row, 0).toString());
+//					}
+//				}
+//			}
+//		});
+//
+//		jTableClient.addMouseListener(new MouseAdapter() {
+//			public void mouseClicked(MouseEvent e) {
+//				if (SwingUtilities.isLeftMouseButton(e)) {
+//					Point p = e.getPoint();
+//
+//					int row = jTableClient.rowAtPoint(p);
+//					if(jTableClient.getRowCount() > row){
+//						inputClient.setText(jTableClient.getValueAt(row, 0).toString());
+//					}
+//				}
+//			}
+//		});
 		
 		jTableMixedWorker.setDefaultRenderer(WorkerStatus.class, new ColorRenderer(true));
+		jTableMixedWorker.setDefaultRenderer(String.class, centerRenderer);
+		jTableMixedWorker.setDefaultRenderer(Double.class, centerRenderer);
+		jTableMixedWorker.setDefaultRenderer(Integer.class, centerRenderer);
+		jTableMixedWorker.setDefaultRenderer(Long.class, centerRenderer);
+		
+		JTableHeader workerHeader = jTableMixedWorker.getTableHeader();
+		TableCellRenderer workerRenderer = workerHeader.getDefaultRenderer();
+		JLabel workerHeaderLabel = (JLabel) workerRenderer;
+		workerHeaderLabel.setHorizontalAlignment(JLabel.CENTER);
 		
 		jTableMixedWorker.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -700,6 +721,16 @@ public class Gui extends JApplet implements ActionListener {
 				}
 			}
 		});
+		
+		jTableMixedClient.setDefaultRenderer(String.class, centerRenderer);
+		jTableMixedClient.setDefaultRenderer(Double.class, centerRenderer);
+		jTableMixedClient.setDefaultRenderer(Integer.class, centerRenderer);
+		jTableMixedClient.setDefaultRenderer(Long.class, centerRenderer);
+		
+		JTableHeader clientsHeader = jTableMixedClient.getTableHeader();
+		TableCellRenderer clientsRenderer = clientsHeader.getDefaultRenderer();
+		JLabel clientsHeaderLabel = (JLabel) clientsRenderer;
+		clientsHeaderLabel.setHorizontalAlignment(JLabel.CENTER);
 		
 		jTableMixedClient.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -719,13 +750,13 @@ public class Gui extends JApplet implements ActionListener {
 	private JPanel makeTimeRangeButtons(GraphingData graph, String title) {
 		JPanel panel = new JPanel();
 		JRadioButton minute1 = new JRadioButton("1 min");
-		minute1.setActionCommand("20");
+		minute1.setActionCommand("1");
 		
 		JRadioButton minute5 = new JRadioButton("10 min");
-		minute5.setActionCommand("200");
+		minute5.setActionCommand("10");
 
 		JRadioButton minute10 = new JRadioButton("100 min");
-		minute10.setActionCommand("2000");
+		minute10.setActionCommand("100");
 		minute10.setSelected(true);
 
 		// Group the radio buttons.
@@ -734,7 +765,7 @@ public class Gui extends JApplet implements ActionListener {
 		group.add(minute5);
 		group.add(minute10);
 
-		JTextField scale = new JTextField("     ");
+		JTextField scale = new JTextField(5);
 
 		class ActionL implements ActionListener {
 			private GraphingData graph;
@@ -748,10 +779,16 @@ public class Gui extends JApplet implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {
-					graph.setShowLast(Integer.valueOf(scale.getText().trim()));
-				} catch (NumberFormatException e1) {
-					graph.setShowLast(Integer.valueOf(e.getActionCommand()));
+				
+				if(e.getSource().getClass().equals(JRadioButton.class)) {
+					graph.setShowLast((int)(60*1000/UPDATE_TIME*Integer.valueOf(e.getActionCommand())));
+				} else {
+					int oldShowLast = graph.getShowLast();
+					try {
+						graph.setShowLast((int)(60*1000/UPDATE_TIME*Integer.valueOf(scale.getText())));
+					} catch (NumberFormatException e1) {
+						graph.setShowLast(oldShowLast);
+					}
 				}
 			}
 		}
@@ -940,13 +977,13 @@ public class Gui extends JApplet implements ActionListener {
 			case 1:
 				return "IP";
 			case 2:
-				return "Port";
+				return "Hostname";
 			case 3:
-				return "Nr Cores";
+				return "Cores";
 			case 4:
 				return "O.S.";
 			case 5:
-				return "Host Name";
+				return "Sala";
 //			case 6:
 //				return "Farming Time";
 			case 6:
@@ -956,13 +993,13 @@ public class Gui extends JApplet implements ActionListener {
 			case 8:
 				return "Running Time";
 			case 9:
-				return "# TODO";
+				return "Pending Tasks";
 			case 10:
 				return "Speed";
 			case 11:
 				return "Speed/Core";
 			case 12:
-				return "STATUS";
+				return "Status";
 			case 13:
 				return "Worker Updated";
 			}
@@ -985,13 +1022,13 @@ public class Gui extends JApplet implements ActionListener {
 			case 1:
 				return workerData.getWorkerAddress();
 			case 2:
-				return workerData.getWorkerPort();
+				return workerData.getHostName();
 			case 3:
 				return workerData.getNumberOfProcessors();
 			case 4:
 				return workerData.getOperatingSystem();
 			case 5:
-				return workerData.getHostName();
+				return getRoomOfWorkerHostname(workerData.getHostName());
 //			case 6:
 //				Time time = new Time(
 //						(long) workerData.getTotalTimeSpentFarming() - 3600000);
@@ -1029,12 +1066,12 @@ public class Gui extends JApplet implements ActionListener {
 				return new WorkerStatus(color, lastRefresh);
 			case 13:
 				Color newColor;
-				Date workerJarDate = (Date)workerData.getJarDate();
+				Long workerJarDate = (Long)workerData.getJarDate();
 				
 				if(masterBlackList.contains(workerData.getWorkerAddress())){
 					newColor = Color.BLACK;
 				}else{
-					if (workerJarDate.after(evolveJarDate)){
+					if (workerJarDate >= evolveJarDate){
 						newColor = Color.GREEN;
 					}else{
 						newColor = Color.RED;
@@ -1064,33 +1101,36 @@ public class Gui extends JApplet implements ActionListener {
 		public Component getTableCellRendererComponent(JTable table, Object ws,
 				boolean isSelected, boolean hasFocus, int row, int column) {
 			WorkerStatus workerStatus = (WorkerStatus) ws;
-			Color newColor = workerStatus.getColor();
-			setHorizontalAlignment(CENTER);
-			if(workerStatus.getTime() >= 0 ){
-				setText(workerStatus.getTime() + "");
-				setBackground(newColor);
-				setForeground(new Color(255 - newColor.getRed(),
-						255 - newColor.getGreen(), 255 - newColor.getBlue()));
-				if (isBordered) {
-					if (isSelected) {
-						if (selectedBorder == null) {
-							selectedBorder = BorderFactory.createMatteBorder(2, 5,
-									2, 5, table.getSelectionBackground());
+			if(workerStatus != null){
+				Color newColor = workerStatus.getColor();
+				setHorizontalAlignment(CENTER);
+				if(workerStatus.getTime() >= 0 ){
+					setText(workerStatus.getTime() + "");
+					setBackground(newColor);
+					setForeground(new Color(255 - newColor.getRed(),
+							255 - newColor.getGreen(), 255 - newColor.getBlue()));
+					if (isBordered) {
+						if (isSelected) {
+							if (selectedBorder == null) {
+								selectedBorder = BorderFactory.createMatteBorder(2, 5,
+										2, 5, table.getSelectionBackground());
+							}
+							setBorder(selectedBorder);
+						} else {
+							if (unselectedBorder == null) {
+								unselectedBorder = BorderFactory.createMatteBorder(2,
+										5, 2, 5, table.getBackground());
+							}
+							setBorder(unselectedBorder);
 						}
-						setBorder(selectedBorder);
-					} else {
-						if (unselectedBorder == null) {
-							unselectedBorder = BorderFactory.createMatteBorder(2,
-									5, 2, 5, table.getBackground());
-						}
-						setBorder(unselectedBorder);
 					}
+				}else{
+					setBackground(newColor);
+					setText("");
 				}
-			}else{
-				setBackground(newColor);
-				setText("");
-			}
-			return this;
+				return this;
+			}else
+				return null;
 		}
 	}
 
@@ -1115,7 +1155,7 @@ public class Gui extends JApplet implements ActionListener {
 			case 1:
 				return "IP";
 			case 2:
-				return "Desc";
+				return "Description";
 //			case 3:
 //				return "Priority";
 			case 3:
@@ -1166,7 +1206,7 @@ public class Gui extends JApplet implements ActionListener {
 						/ (clientData.getTotalNumberOfTasksDone()
 								/ ((currentServerTime - clientData
 										.getStartTime()) *1.0)));
-				return  new Time(eta- 3600000);
+				return  calculateTime(eta);
 			}
 			return "Unknown";
 		}
@@ -1228,6 +1268,7 @@ public class Gui extends JApplet implements ActionListener {
 							newColor = Color.RED;
 						}
 					}
+					
 					return new WorkerStatus(newColor);
 			}
 			
@@ -1243,6 +1284,15 @@ public class Gui extends JApplet implements ActionListener {
 			}
 		}
 		
+	}
+	
+	public String getRoomOfWorkerHostname(String workerHostname){
+		for (String key : hashHostnames.keySet()) {
+			if(hashHostnames.get(key).contains(workerHostname)){
+				return key;
+			}
+		}
+		return "No room";
 	}
 	
 	public double getSpeed() {
@@ -1273,5 +1323,36 @@ public class Gui extends JApplet implements ActionListener {
 		if (serverName != null) {
 			serverAddress = serverName;
 		}
+	}
+	
+	public static String calculateTime(long mili) {
+		
+		long sec = mili/1000;
+		
+	    int day = (int) TimeUnit.SECONDS.toDays(sec);
+	    long hours = TimeUnit.SECONDS.toHours(sec) -
+	                 TimeUnit.DAYS.toHours(day);
+	    long minutes = TimeUnit.SECONDS.toMinutes(sec) - 
+	                  TimeUnit.DAYS.toMinutes(day) -
+	                  TimeUnit.HOURS.toMinutes(hours);
+	    long seconds = TimeUnit.SECONDS.toSeconds(sec) -
+	                  TimeUnit.DAYS.toSeconds(day) -
+	                  TimeUnit.HOURS.toSeconds(hours) - 
+	                  TimeUnit.MINUTES.toSeconds(minutes);
+	    
+	    while(day > 0) {
+	    	hours+=24;
+	    	day--;
+	    }
+	    
+	    String h = ""+hours;
+	    String m = ""+minutes;
+	    String s = ""+seconds;
+	    
+	    if(h.length() < 2) h = "0"+h;
+	    if(m.length() < 2) m = "0"+m;
+	    if(s.length() < 2) s = "0"+s;
+	    
+	    return h+":"+m+":"+s;
 	}
 }
