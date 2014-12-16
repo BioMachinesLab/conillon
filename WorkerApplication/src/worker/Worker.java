@@ -313,8 +313,8 @@ public class Worker {
 			// Date date = new Date();
 			// this.workerData.setStartTime(dateFormat.format(date));
 			
-			Date date = getWorkerDate();
-			this.workerData.setJarDate(date);
+			Long workerDate = getWorkerDate();
+			this.workerData.setJarDate(workerDate);
 			
 			out.println(localhostinfo.toString());
 		} catch (UnknownHostException e) {
@@ -324,24 +324,17 @@ public class Worker {
 
 	}
 
-	private synchronized Date getWorkerDate(){
-		//Subtrair a data do sistema à data do jar e comparar o tempo a que o jar foi actualizado
-		try {
-			String os = System.getProperty("os.name");
-			if(os.contains("Windows"))
-				folderLocation="C:\\conilon\\";
-			
-			if(os.contains("nix") || os.contains("nux") || os.contains("aix"))
-				folderLocation+="/";
+	private synchronized Long getWorkerDate(){
+		String os = System.getProperty("os.name");
+		if(os.contains("Windows"))
+			folderLocation="C:\\conilon\\";
+		
+		if(os.contains("nix") || os.contains("nux") || os.contains("aix"))
+			folderLocation+="/";
 
-			File worker = new File(folderLocation+"worker.jar");
-			SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy HH:mm:ss");
-			Date workerDate = sdf.parse(sdf.format(worker.lastModified()));
-			return workerDate;
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		return null;
+		File worker = new File(folderLocation+"worker.jar");
+		
+		return worker.lastModified();
 	}
 	
 	private synchronized void addWork() {
