@@ -10,6 +10,7 @@ public class BlackList extends Thread {
 
 	private ArrayList<String> list;
 	private File file;
+	private long lastFileModification = 0;
 	
 	public BlackList() {
 		list = new ArrayList<String>();
@@ -31,6 +32,12 @@ public class BlackList extends Thread {
 	}
 	
 	public void readFromFile(File file){
+		
+		if(lastFileModification == file.lastModified()){
+			return;
+		}
+		lastFileModification = file.lastModified();
+		
 		try {
 			Scanner s = new Scanner(file);
 			list.clear();

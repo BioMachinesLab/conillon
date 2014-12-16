@@ -3,6 +3,7 @@ package masterserver;
 import helpers.BlackList;
 import helpers.RoomInformation;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
@@ -64,6 +65,8 @@ public class MasterServer {
 	
 	private BlackList blackList;
 	private RoomInformation roomsInformation;
+	
+	private File workerJar = new File("worker.jar");
 
 	public MasterServer(InfrastructureInformation infrastructureInformation) {
 		super();
@@ -72,15 +75,13 @@ public class MasterServer {
 		System.out.println(tmxb.getCurrentThreadCpuTime());
 		System.out.println(tmxb.getCurrentThreadUserTime());
 		System.out.println(tmxb.getDaemonThreadCount());
-		System.out.println("Version: Oct - 2014 - Evolve");
-
-		
+//		System.out.println("Version: Oct - 2014 - Evolve");
 		
 		blackList  = new BlackList();
-		blackList.start();
+//		blackList.start();
 		
 		roomsInformation = new RoomInformation();
-		roomsInformation.start();
+//		roomsInformation.start();
 	}
 
 	public void execute() {
@@ -212,111 +213,7 @@ public class MasterServer {
 
 	void addSingleTask(TaskDescription task) {
 		taskScheduler.addTask(task);
-		// boolean flag = false;
-		// // addSendedTask_FaultTolerance(task);
-		// synchronized (pendingTasks) {
-		// long clientID = task.getId();
-		// if (pendingTasks.containsKey(clientID)) {
-		// LinkedList<TaskDescription> list = pendingTasks.get(clientID);
-		// synchronized (list) {
-		// list.add(task);
-		// }
-		// flag = true;
-		// return;
-		// }
-		// }
-		// if (!flag) {
-		// LinkedList<TaskDescription> localTaskList = new
-		// LinkedList<TaskDescription>();
-		// localTaskList.add(task);
-		// addTaskList(localTaskList, task.getId());
-		// // notifyAll();
-		// }
 	}
-
-	// synchronized TaskDescription getTask(WorkerData workerData) {
-	// TaskDescription taskToReturn = null;
-	// // long lastClientID = -1;
-	// int position = -1;
-	//
-	// while (taskToReturn == null) {
-	//
-	// try {
-	// while (pendingTasks.size() == 0) {
-	// wait();
-	// }
-	// } catch (InterruptedException e) {
-	// // e.printStackTrace();
-	// System.out.println(getIdAndTime(workerData)
-	// + " ->Was interrupted while waiting!");
-	// return null;
-	// }
-	//
-	// if (taskScheduler != null) {
-	// if (taskScheduler.dispatchSame()) {
-	// taskToReturn = taskScheduler.getTask(workerData.getId());
-	// // lastClientID = taskScheduler.getClientID();
-	// // position = taskScheduler.getPosition();
-	// return taskToReturn;
-	// }
-	// position = taskScheduler.getPosition();
-	//
-	// }
-	// synchronized (pendingTasks) {
-	// Long vector[] = new Long[pendingTasks.size()];
-	// int i = 0;
-	// Enumeration<Long> keys = pendingTasks.keys();
-	// while (keys.hasMoreElements()) {
-	// long key = (Long) keys.nextElement();
-	// LinkedList<TaskDescription> list = pendingTasks.get(key);
-	// synchronized (list) {
-	// if (list.size() == 0) {
-	// pendingTasks.remove(key);
-	// } else {
-	// vector[i++] = key;
-	// }
-	// }
-	// }
-	// if (vector.length > 0) {
-	// if (position == -1) {
-	// taskScheduler = new TaskScheduler(
-	// pendingTasks.get(vector[0]), 0);
-	//
-	// } else {
-	// int new_position = position;
-	// new_position++;
-	//
-	// if (new_position < vector.length) // Verificar esta
-	// // altera������o
-	// {
-	// if (vector[new_position] != null)
-	// if (pendingTasks
-	// .containsKey(vector[new_position])) {
-	// taskScheduler = new TaskScheduler(
-	// pendingTasks
-	// .get(vector[new_position]),
-	// new_position);
-	// return taskScheduler.getTask();
-	// }
-	// } else {
-	// if (new_position >= vector.length
-	// && pendingTasks.size() > 0
-	// && vector.length > 0) // verificar
-	// // altera������o
-	// {
-	// taskScheduler = new TaskScheduler(
-	// pendingTasks.get(vector[0]), 0);
-	// return taskScheduler.getTask();
-	// }
-	// }
-	//
-	// }
-	// }
-	// }
-	// }
-	//
-	// return null;
-	// }
 
 	public TaskDescription getTask(WorkerData workerData)
 			throws InterruptedException {
@@ -420,28 +317,6 @@ public class MasterServer {
 		}
 
 	}
-
-	/*
-	 * private void addSendedTask_FaultTolerance(TaskDescription task) { boolean
-	 * flag = false;
-	 * 
-	 * 
-	 * synchronized (statefulFaultTolerance) {
-	 * Iterator<LinkedList<TaskDescription>> taskIterator =
-	 * statefulFaultTolerance.iterator(); while(taskIterator.hasNext()){
-	 * LinkedList<TaskDescription> list =
-	 * (LinkedList<TaskDescription>)taskIterator.next();
-	 * Iterator<TaskDescription> tl = list.iterator(); while(tl.hasNext()){
-	 * TaskDescription td =(TaskDescription) tl.next();
-	 * if(td.getClientID()==task.getClientID()) { synchronized (list) {
-	 * list.add(task); } flag = true; break; } } } if(!flag){
-	 * LinkedList<TaskDescription> localTaskList = new
-	 * LinkedList<TaskDescription>(); localTaskList.add(task);
-	 * statefulFaultTolerance.add(localTaskList); //Checker ch = new
-	 * Checker(localTaskList); //ch.start(); } }
-	 * //System.out.println("FAULT TOLERANCE: Number of tasks:"
-	 * +pendingTasks.size()); }
-	 */
 
 	public void addToPendingResults(long id,
 			LinkedList<CompletedTask> localTaskList) {
@@ -557,6 +432,7 @@ public class MasterServer {
 								int workerVersion = (Integer) in.readObject();
 								out.writeObject(new Integer(
 										WorkerData.CONILLON_VERSION));
+								out.writeObject(new Long(workerJarLastModified()));
 								if (workerVersion != WorkerData.CONILLON_VERSION) {
 									System.out
 											.println("Invalid Worker version "
@@ -651,4 +527,14 @@ public class MasterServer {
 	public RoomInformation getRoomInformation() {
 		return roomsInformation;
 	}
+	
+	public File getWorkerJar() {
+		return workerJar;
+	}
+	
+	public long workerJarLastModified(){
+		return workerJar.lastModified();
+	}
+	
+	
 }

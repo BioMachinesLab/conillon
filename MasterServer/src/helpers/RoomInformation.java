@@ -10,10 +10,13 @@ public class RoomInformation extends Thread {
 
 	private File file;
 	private HashMap<String,ArrayList<String>> rooms;
+	private long lastFileModification = 0;
 	
 	public RoomInformation() {
 		file = new File("hostnames.txt");
 		rooms = new HashMap<String, ArrayList<String>>();
+		
+		readHostFromFile();
 	}
 	
 	@Override
@@ -29,6 +32,12 @@ public class RoomInformation extends Thread {
 	}
 	
 	private void readHostFromFile(){
+		
+		if(lastFileModification == file.lastModified()){
+			return;
+		}
+		lastFileModification = file.lastModified();
+		
 		Scanner scanner = null;
 		try {
 			scanner = new Scanner(file);

@@ -44,7 +44,7 @@ public class AdminThread extends Thread {
 		this.workerDataVector = workerDataVector;
 		this.clientDataVector = clientDataVector;
 		this.workerThread = workerThread;
-		this.clientThread = clientThread;
+		this.clientThread = clientThread;	
 	}
 
 	@Override
@@ -118,14 +118,7 @@ public class AdminThread extends Thread {
 		out.writeObject(ConnectionType.FULL_UPDATE);
 		out.writeObject(new Long(System.currentTimeMillis()));
 		
-		try {
-			File worker = new File("worker.jar");
-			SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy HH:mm:ss");
-			Date adminDate = sdf.parse(sdf.format(worker.lastModified()));
-			out.writeObject(adminDate);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		out.writeObject(new Long(master.workerJarLastModified()));
 		
 		out.writeObject(master.getBlackList().getList());
 		
