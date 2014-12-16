@@ -216,7 +216,8 @@ public class Worker {
 
 				try {
 					int serverVersion = (Integer) this.socketIn.readObject();
-					if (serverVersion != WorkerData.CONILLON_VERSION) {
+					long serverJarDate = (Long) this.socketIn.readObject();
+					if (serverVersion != WorkerData.CONILLON_VERSION || serverJarDate > getWorkerDate()) {
 						out.println("Invalid Worker version "
 								+ WorkerData.CONILLON_VERSION
 								+ " UPGRADE to version " + serverVersion);
@@ -239,60 +240,7 @@ public class Worker {
 
 	}
 
-	private void benchmark() {
-
-		int numberOfProcessors = this.workerData.getNumberOfProcessors();
-		calculatorFIB[] c = new calculatorFIB[16];
-
-		for (int i = 0; i < numberOfProcessors; i++) {
-			c[i] = new calculatorFIB(160000);
-			c[i].start();
-
-		}
-
-	}
-
-	private class calculatorFIB extends Thread {
-
-		int nr;
-
-		public calculatorFIB(int nr) {
-			this.nr = nr;
-
-		}
-
-		public void run() {
-			BigInteger sub2 = new BigInteger("1");
-			BigInteger sub1 = new BigInteger("0");
-
-			BigInteger total = new BigInteger("0");
-
-			int p = 0;
-			long start = System.currentTimeMillis();
-			while (p < nr) {
-
-				total = sub1;
-				sub1 = sub1.add(sub2);
-				sub2 = total;
-				p++;
-			}
-			long end = System.currentTimeMillis();
-			out.println("Terminou:" + this.getId() + " Tempo: " + (end - start)
-					/ 1000 + " - " + sub2);
-			setCpuEvaluation((end - start) / 1000);
-		}
-
-	}
-
-	private void setCpuEvaluation(float eval) {
-
-		this.workerEvaluation = eval / workerData.getNumberOfProcessors();
-		out.println("evaluation" + workerEvaluation);
-
-	}
-
 	private void getLocalHostInfo() {
-		Runtime runtime = Runtime.getRuntime();
 		int numberOfProcessors;
 		String operatingSystem;
 		operatingSystem = System.getProperty("os.name");
@@ -324,7 +272,7 @@ public class Worker {
 
 	}
 
-	private synchronized Long getWorkerDate(){
+	private Long getWorkerDate(){
 		String os = System.getProperty("os.name");
 		if(os.contains("Windows"))
 			folderLocation="C:\\conilon\\";
@@ -334,7 +282,12 @@ public class Worker {
 
 		File worker = new File(folderLocation+"worker.jar");
 		
-		return worker.lastModified();
+		if(worker.exists())
+			return worker.lastModified();
+		else{
+			//For the case where there is no jar file on the worker
+			return System.currentTimeMillis();
+		}
 	}
 	
 	private synchronized void addWork() {
