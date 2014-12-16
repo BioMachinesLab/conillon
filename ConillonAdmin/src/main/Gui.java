@@ -1054,14 +1054,13 @@ public class Gui extends JApplet implements ActionListener {
 			case 12:
 				int lastRefresh = workerData.getTimeSinceLastTask();
 				Color color;
-				if (lastRefresh <= 25) {
-					color = new Color(Math.min(255, 10 * lastRefresh), 255, 0);
-				} else if (lastRefresh <= 51) {
+				if (lastRefresh <= 35) {
+					color = new Color(Math.min(255, 5 * lastRefresh), 255, 0).darker();
+				} else if (lastRefresh <= 70) {
 					color = new Color(255, Math.min(255,
-							255 - (10 * lastRefresh - 255)), 0);
+							255 - (5 * lastRefresh - 255)), 0).darker();
 				} else {
-					color = new Color(Math.max(0, 255 - 10 * lastRefresh + 2
-							* 255), 0, 0);
+					color = new Color(Math.max(0, 255 - 5 * lastRefresh + 1 * 255), 0, 0).darker();
 				}
 				return new WorkerStatus(color, lastRefresh);
 			case 13:
@@ -1072,9 +1071,9 @@ public class Gui extends JApplet implements ActionListener {
 					newColor = Color.BLACK;
 				}else{
 					if (workerJarDate >= evolveJarDate){
-						newColor = Color.GREEN;
+						newColor = Color.GREEN.darker();
 					}else{
-						newColor = Color.RED;
+						newColor = Color.RED.darker();
 					}
 				}
 						
@@ -1097,6 +1096,11 @@ public class Gui extends JApplet implements ActionListener {
 			this.isBordered = isBordered;
 			setOpaque(true); // MUST do this for background to show up.
 		}
+		
+		public Color getContrastColor(Color color) {
+			double y = (299 * color.getRed() + 587 * color.getGreen() + 114 * color.getBlue()) / 1000;
+			return y >= 128 ? Color.black : Color.white;
+		}
 
 		public Component getTableCellRendererComponent(JTable table, Object ws,
 				boolean isSelected, boolean hasFocus, int row, int column) {
@@ -1107,8 +1111,7 @@ public class Gui extends JApplet implements ActionListener {
 				if(workerStatus.getTime() >= 0 ){
 					setText(workerStatus.getTime() + "");
 					setBackground(newColor);
-					setForeground(new Color(255 - newColor.getRed(),
-							255 - newColor.getGreen(), 255 - newColor.getBlue()));
+					setForeground(getContrastColor(newColor));
 					if (isBordered) {
 						if (isSelected) {
 							if (selectedBorder == null) {
@@ -1263,9 +1266,9 @@ public class Gui extends JApplet implements ActionListener {
 						newColor = Color.BLACK;
 					}else{
 						if (hostInfo.isConnected()){
-							newColor = Color.GREEN;
+							newColor = Color.GREEN.darker();
 						}else{
-							newColor = Color.RED;
+							newColor = Color.RED.darker();
 						}
 					}
 					

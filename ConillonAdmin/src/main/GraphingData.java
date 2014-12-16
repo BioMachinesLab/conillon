@@ -87,7 +87,7 @@ public class GraphingData extends JPanel {
 		g2.drawString(String.valueOf(max), 0, (int) (h - PAD - scale * max));
 
 		// Mark data points.
-		g2.setPaint(Color.red);
+		g2.setPaint(Color.RED.darker());
 		for (int i = Math.max(0, data.size() - showLast); i < data.size(); i++) {
 			double x = PAD + (i - init) * xInc;
 			double y = h - PAD - scale * data.get(i);
