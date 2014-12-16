@@ -7,6 +7,7 @@ import comm.RunMode;
 
 public class WorkerData implements Serializable {
 
+	//TODO: Find a way to remove this
 	public static final int CONILLON_VERSION = 10;
 
 	private long startTime;
@@ -31,7 +32,7 @@ public class WorkerData implements Serializable {
 	private int timeSinceLastTask = 0;
 	private int numberOfRequestedTasks = 0;
 	
-	private Date jarDate;
+	private Long jarDate;
 
 	public WorkerData() {
 		super();
@@ -207,11 +208,11 @@ public class WorkerData implements Serializable {
 		this.operatingSystem = operatingSystem;
 	}
 	
-	public synchronized Date getJarDate() {
+	public synchronized Long getJarDate() {
 		return jarDate;
 	}
 
-	public synchronized void setJarDate(Date jarDate) {
+	public synchronized void setJarDate(Long jarDate) {
 		this.jarDate = jarDate;
 	}
 	
