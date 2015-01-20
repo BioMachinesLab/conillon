@@ -393,6 +393,9 @@ public class Client {
 						out.writeObject(request);
 						out.writeObject(classData);
 					}
+				} catch(IllegalArgumentException e) {
+					System.err.println("This might be a problem because one sub-project has a different java version");
+					e.printStackTrace();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
