@@ -1,0 +1,132 @@
+# Introduction #
+
+In this page, you can find information on how to install and run Conilon on your network. Conilon is composed of several different elements:
+
+  * Clients: generate tasks that need to be executed
+  * Workers: execute the Clients' tasks
+  * Master Server: manages task distribution from Clients to Workers
+  * Code Server: manages runtime code requests from Workers
+
+# Getting the Code #
+
+In this repository, you can find several projects. Checkout the following projects into your IDE:
+
+  * BaseClient
+  * CodeServer
+  * MasterServer
+  * WorkerApplication
+
+Optionally, checkout ConillonAdmin if you want to see if everything is running smoothly.
+
+# Generating the JARs #
+
+Generate runnable jars for the following projects:
+
+  * BaseClient
+    * client.jar
+    * main class: ClassCodeServer
+  * MasterServer
+    * master.jar
+    * main class: CommServer
+  * WorkerApplication
+    * worker.jar
+    * main class: Main
+  * ConillonAdmin
+    * adm.jar
+    * main class: StandAloneAdm
+
+Generate a simple library jar for the following projects:
+
+  * BaseClient
+
+# Running the Server #
+
+One computer will be responsible for serving code and tasks. In the following examples, let's assume that the IP of that computer is 1.1.1.1. Don't forget to change the IP to the correct IP of the server computer. In that computer, run the two following commands, in this order
+
+```
+java -jar code.jar
+java -jar master.jar 1.1.1.1
+```
+
+Conilon should now be running, and you can check that it is by using the Admin application from any computer in the network:
+
+```
+java -jar adm.jar 1.1.1.1
+```
+
+# Recruiting Workers #
+
+Workers can connect to Conilon by running the following command:
+
+```
+java -jar worker.jar 1.1.1.1
+```
+
+It is also possible to create an HTML page in the Server's working directory in order to load the worker Applet, for instance.
+
+# Creating Tasks #
+
+In your Java project, import the client.jar library. You can now extend the Task class, like so:
+
+```
+import result.Result;
+import tasks.Task;
+
+public class SimpleSampleTask extends Task {
+	
+	private int value;
+	
+	public SimpleSampleTask() {
+		super();
+	}
+	
+	@Override
+	public void run() {
+		Random rand = new Random();
+		this.value = rand.nextInt(100);
+	}
+	
+	public Result getResult() {
+		SimpleResult result = new SimpleResult(this.value);
+	}
+}
+```
+
+The result you want from your Task can be defined using a new Result class:
+
+```
+import result.Result;
+
+public class SimpleResult extends Result {
+	private int result;
+
+	public SimpleResult(int result) {
+		super();
+		this.result = result;
+	}
+
+	public double getResult() {
+		return result;
+	}
+}
+```
+
+# Submitting Tasks #
+
+In order to submit your task, all you have to do is create a Client, connect to the server and start submitting:
+
+```
+	ClientPriority priority = ClientPriority.NORMAL;
+	int serverPort = 0; //this will choose the default server port
+	int codePort = 0;
+	String serverName = "1.1.1.1"; //Conilon server IP
+	String description = "PiTask";
+
+	Client client = new Client(description,priority, serverName, serverPort, serverName, codePort);
+
+	SimpleTask task = new SimpleTask();
+	client.submit(task);
+	Result result = client.getNextResult(); //getNextResult blocks until one task is remotely executed and returned
+	SimpleResult simpleResult = (SimpleResult)result;
+	System.out.println(simpleResult.getResult());
+```
