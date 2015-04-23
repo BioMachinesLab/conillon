@@ -78,10 +78,10 @@ public class MasterServer {
 //		System.out.println("Version: Oct - 2014 - Evolve");
 		
 		blackList  = new BlackList();
-//		blackList.start();
+		blackList.start();
 		
 		roomsInformation = new RoomInformation();
-//		roomsInformation.start();
+		roomsInformation.start();
 	}
 
 	public void execute() {

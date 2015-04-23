@@ -304,6 +304,8 @@ public class Gui extends JApplet implements ActionListener {
 								
 							} else {
 								workerKeys = null;
+								numberOfWorkers.setText("0");
+								workerTableModel.fireTableDataChanged();
 							}
 							int numPending = 0;
 	
@@ -336,6 +338,8 @@ public class Gui extends JApplet implements ActionListener {
 									
 							} else {
 								clientKeys = new Object[0];
+								numberOfClients.setText("0");
+								clientTableModel.fireTableDataChanged();
 							}
 							
 							if(!backupHashHostnames.equals(hashHostnames)){
