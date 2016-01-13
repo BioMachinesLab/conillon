@@ -146,7 +146,12 @@ public class MasterServer {
 
 	long addWorkerData(WorkerData data, WorkerThread wt) {
 		
-		workerID = logging.Logger.getInstance().log(Event.START, data);
+		//SF logging
+		try {
+			workerID = logging.Logger.getInstance().log(Event.START, data);
+		} catch (Exception e) {
+			workerID = 0;	//SF default (before logging approach)
+		}
 		
 		synchronized (workerDataVector) {
 			workerDataVector.put(this.workerID, data);
@@ -155,13 +160,19 @@ public class MasterServer {
 			workerThread.put(this.workerID, wt);
 		}
 		synchronized (this) {
-			return workerID;
+			//SF Assure that application keeps running
+			//In case if logging didn t succeed
+			return workerID == 0 ? workerID++ : workerID;
 		}
 	}
 
 	void addClient(ClientData cd, ClientThread ct) {
 		
-		logging.Logger.getInstance().log(Event.START, cd);
+		try {
+			logging.Logger.getInstance().log(Event.START, cd);
+		} catch (Exception e) {
+			//SF Assure that application keeps running 
+		}
 		
 		synchronized (clientDataVector) {
 			clientDataVector.put(cd.getId(), cd);
@@ -173,9 +184,13 @@ public class MasterServer {
 	}
 
 	void removeClient(ClientData cd) {
-		//HERE
-		//TODO DEVsimao Test New removeWorker
-		logging.Logger.getInstance().log(Event.STOP, cd);
+		
+		try {
+			logging.Logger.getInstance().log(Event.STOP, cd);
+		} catch (Exception e) {
+			//SF Assure that application keeps running 
+		}
+		
 		
 		synchronized (clientThread) {
 			if (clientThread.containsKey(cd.getId()))
@@ -191,9 +206,13 @@ public class MasterServer {
 	
 	void removeWorker(long id, WorkerThread wt) {
 		
-		//TODO DEVsimao Test New removeWorker				
+		try {
+			logging.Logger.getInstance().log(Event.STOP, wt.getWorkerData());
+		} catch (Exception e) {
+			//SF Assure that application keeps running 
+		}				
 		
-		logging.Logger.getInstance().log(Event.STOP, wt.getWorkerData());
+		//SF the id argument was replaced by the worker data property
 		long workerId = wt.getWorkerData().getId();
 		
 		synchronized (workerDataVector) {
