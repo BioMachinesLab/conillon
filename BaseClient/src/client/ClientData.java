@@ -12,6 +12,8 @@ public class ClientData implements Serializable {
 	private long taskCounter = 0;
 	private int port = 0;
 	private String ip = "";
+	private String macAddress;
+	private String hostName;
 	private ClientPriority clientPriority;
 	private long totalNumberOfTasksDone = 0;
 	private long totalNumberOfTasks = 0;
@@ -43,6 +45,33 @@ public class ClientData implements Serializable {
 		return id;
 	}
 
+	/**
+	 * @return the macAddress
+	 */
+	public String getMacAddress() {
+		return macAddress;
+	}
+
+	/**
+	 * @param macAddress the macAddress to set
+	 */
+	public void setHostName(String hostName) {
+		this.hostName = hostName;
+	}
+
+	//;
+	public String getHostName() {
+		return hostName;
+	}
+
+	/**
+	 * @param macAddress the macAddress to set
+	 */
+	public void setMacAddress(String macAddress) {
+		this.macAddress = macAddress;
+	}
+	//hostName;
+	
 	public long getTotalNumberOfTasksDone() {
 		return totalNumberOfTasksDone;
 	}

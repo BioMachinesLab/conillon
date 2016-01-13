@@ -18,6 +18,7 @@ public class WorkerData implements Serializable {
 	private long lastTaskTime = 0;
 	private double totalTimeSpentFarming = 0.0;
 	private String workerAddress = "N/A";
+	private String macAddress;
 	private int workerPort = 0;
 	private boolean running = false;
 	private int connectionCount = 0;
@@ -106,6 +107,9 @@ public class WorkerData implements Serializable {
 	}
 
 	public synchronized double getAverageTimePerTask() {
+		if(this.numberOfTasksProcessed < 1) {
+			return 0;
+		}		
 		this.averageTimePerTask = this.totalTimeSpentFarming
 				/ this.numberOfTasksProcessed;
 		return averageTimePerTask;
@@ -123,6 +127,10 @@ public class WorkerData implements Serializable {
 		return workerAddress;
 	}
 
+	public String getMacAddress() {
+		return macAddress;
+	}
+	
 	public int getWorkerPort() {
 		return workerPort;
 	}
@@ -177,9 +185,13 @@ public class WorkerData implements Serializable {
 	}
 
 	public synchronized void setWorkerAddress(String slaveAddress) {
-		this.workerAddress = slaveAddress;
+		this.workerAddress = slaveAddress.startsWith("/") ? slaveAddress.substring(1) : slaveAddress;
 	}
 
+	public synchronized void setMacAddress(String macAddress) {
+		this.macAddress = macAddress;
+	}
+	
 	public  synchronized void setWorkerPort(int slavePort) {
 		this.workerPort = slavePort;
 	}

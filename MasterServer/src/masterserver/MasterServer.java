@@ -2,6 +2,8 @@ package masterserver;
 
 import helpers.BlackList;
 import helpers.RoomInformation;
+import logging.Logger.Entity;
+import logging.Logger.Event;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +12,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -141,6 +145,9 @@ public class MasterServer {
 	}
 
 	long addWorkerData(WorkerData data, WorkerThread wt) {
+		
+		workerID = logging.Logger.getInstance().log(Event.START, data);
+		
 		synchronized (workerDataVector) {
 			workerDataVector.put(this.workerID, data);
 		}
@@ -148,12 +155,14 @@ public class MasterServer {
 			workerThread.put(this.workerID, wt);
 		}
 		synchronized (this) {
-			return workerID++;
+			return workerID;
 		}
 	}
 
 	void addClient(ClientData cd, ClientThread ct) {
-
+		
+		logging.Logger.getInstance().log(Event.START, cd);
+		
 		synchronized (clientDataVector) {
 			clientDataVector.put(cd.getId(), cd);
 		}
@@ -163,28 +172,37 @@ public class MasterServer {
 
 	}
 
-	void removeClient(long id) {
+	void removeClient(ClientData cd) {
 		//HERE
+		//TODO DEVsimao Test New removeWorker
+		logging.Logger.getInstance().log(Event.STOP, cd);
+		
 		synchronized (clientThread) {
-			if (clientThread.containsKey(id))
-				clientThread.remove(id);
+			if (clientThread.containsKey(cd.getId()))
+				clientThread.remove(cd.getId());
 		}
 		synchronized (clientDataVector) {
-			if (clientDataVector.containsKey(id))
-				clientDataVector.remove(id);
+			if (clientDataVector.containsKey(cd.getId()))
+				clientDataVector.remove(cd.getId());
 		}
-		deleteClientTasks(id);
+		deleteClientTasks(cd.getId());
 	}
-
+	
+	
 	void removeWorker(long id, WorkerThread wt) {
-
+		
+		//TODO DEVsimao Test New removeWorker				
+		
+		logging.Logger.getInstance().log(Event.STOP, wt.getWorkerData());
+		long workerId = wt.getWorkerData().getId();
+		
 		synchronized (workerDataVector) {
-			if (workerDataVector.containsKey(id))
-				workerDataVector.remove(id);
+			if (workerDataVector.containsKey(workerId))
+				workerDataVector.remove(workerId);
 		}
 		synchronized (workerThread) {
-			if (workerThread.containsKey(id))
-				workerThread.remove(id);
+			if (workerThread.containsKey(workerId))
+				workerThread.remove(workerId);
 		}
 		taskObserver.deleteObserver(wt);
 		taskObserver.deleteObserver(wt);

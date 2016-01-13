@@ -72,7 +72,7 @@ public class CommServer {
 	}
 
 	private synchronized int addWorkerData(WorkerInformation data) {
-
+		
 		WorkerInformationVector.put(this.workerID, data);
 		notify();
 		return workerID++;

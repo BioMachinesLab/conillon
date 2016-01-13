@@ -6,7 +6,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import result.ClassNameRequest;
 import result.ClassRequest;
@@ -45,7 +50,10 @@ public class Client {
 	private ObjectOutputStream outputStream;
 	private String desc;
 	private ObjectInputStream inputStream;
-
+	
+	private String macAddress;
+	private String hostName;
+	
 	public Client(String desc, ClientPriority priority, String masterAddress,
 			int masterPort, String codeServerAddress, int codeServerPort) {
 		this(desc, priority, masterAddress, masterPort, codeServerAddress,
@@ -169,8 +177,13 @@ public class Client {
 				// out.writeObject(new Integer(version));
 				out.writeObject(priority);
 
+				this.macAddress = getMacAddress();
+				this.hostName = getHostName(); 
+						   
+				out.writeObject(String.format("<info><mac_address>%s</mac_address><host_name>%s</host_name></info>", this.macAddress, this.hostName));
+				
 				new resultFetcher().start();
-				System.out.println("Connected to MasterServer");
+				System.out.println("Connected to MasterServer!");
 			} else {
 				System.out.println("Comm has problems!!");
 			}
@@ -439,5 +452,44 @@ public class Client {
 		// Close the input stream and return bytes
 		is.close();
 		return bytes;
+	}
+	
+	/*
+	 * Se se conseguir determinar o IP usar a funcao getByIp
+	 */
+	private String getMacAddress() {
+		Enumeration<NetworkInterface> networkInterfaces = null;
+		try {
+			networkInterfaces = NetworkInterface.getNetworkInterfaces();
+		} catch (SocketException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		byte[] mac = null;
+		while (networkInterfaces != null && networkInterfaces.hasMoreElements()) {
+			NetworkInterface networkInterface = (NetworkInterface) networkInterfaces.nextElement();
+			
+			try {
+				mac = networkInterface.getHardwareAddress();
+			} catch (SocketException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}				
+			if (mac != null) { break; }
+		}					
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < mac.length; i++) { sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : "")); }
+		return sb.toString();
+	}
+	
+	private String getHostName() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			return "FAIL";
+		}
 	}
 }

@@ -16,6 +16,7 @@ import client.ClientDescription;
 
 import comm.ClientPriority;
 import comm.ConnectionType;
+import helpers.XmlParser;
 
 class ClientThread extends Thread {
 	private Socket socket;
@@ -51,7 +52,7 @@ class ClientThread extends Thread {
 		try {
 			this.cd = new ClientData(socket.getInetAddress().toString(),
 					socket.getPort(), totalNumberOfTasks, desc);
-
+			//this.socket.get
 			while (true) {
 				ConnectionType type = (ConnectionType) in.readObject();
 
@@ -59,13 +60,26 @@ class ClientThread extends Thread {
 				case CLIENT_NEW_PROBLEM:
 					this.myID = (Integer) in.readObject();
 					cd.setId(myID);
-					master.addClient(cd, this);
+					//master.addClient(cd, this);
 					this.totalNumberOfTasks = (Integer) in.readObject();
 					cd.setTotalNumberOfTasks(totalNumberOfTasks);
 					this.desc = (String) in.readObject();
 					cd.setDesc(desc);
 					in.setProblemAndVersion(myID);
 					this.priority = (ClientPriority) in.readObject();
+					
+					String clientInfo = (String)in.readObject(); 
+					XmlParser xmlParser = new XmlParser(clientInfo);
+					
+					//Set Client MAc Address					
+					cd.setMacAddress(xmlParser.getMacAddress());
+					
+					//Set Host Name
+					cd.setHostName(xmlParser.getHostName());
+					
+
+					master.addClient(cd, this);
+					
 					description = new ClientDescription(myID, priority, out);
 					cd.setClientPriority(priority);
 
@@ -121,7 +135,9 @@ class ClientThread extends Thread {
 
 	public void disconnect() {
 		try {
-			master.removeClient(myID);
+			//TODO DEVsimao Test New removeWorker
+			master.removeClient(this.cd);
+			//master.removeClient(myID);			
 			master.deleteClientTasks(myID);
 			taskObserver.canceledTaskWarning(description);
 			in.close();
@@ -196,5 +212,5 @@ class ClientThread extends Thread {
 			}
 		}
 	}
-
+	
 }

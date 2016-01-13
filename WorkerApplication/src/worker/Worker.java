@@ -10,11 +10,14 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -244,7 +247,7 @@ public class Worker {
 		int numberOfProcessors;
 		String operatingSystem;
 		operatingSystem = System.getProperty("os.name");
-
+		
 		numberOfProcessors = numberofCores;// = runtime.availableProcessors();
 		try {
 			this.workerData.setMainWorkerID(mainWorkerID);
@@ -252,14 +255,14 @@ public class Worker {
 					operatingSystem, InetAddress.getLocalHost());
 			out.println(localhostinfo.toString());
 			this.workerData.setHostName(InetAddress.getLocalHost().getHostName());
-			this.workerData.setOperatingSystem(operatingSystem);
-			this.workerData.setWorkerAddress(InetAddress.getLocalHost()
-					.toString());
+			this.workerData.setOperatingSystem(operatingSystem);			
+			
+			this.workerData.setWorkerAddress(InetAddress.getLocalHost().toString());
+						
+			
+			this.workerData.setMacAddress(getMacAddress());
+			
 			this.workerData.setNumberOfProcessors(numberOfProcessors);
-			// DateFormat dateFormat = new
-			// SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-			// Date date = new Date();
-			// this.workerData.setStartTime(dateFormat.format(date));
 			
 			Long workerDate = getWorkerDate();
 			this.workerData.setJarDate(workerDate);
@@ -272,6 +275,35 @@ public class Worker {
 
 	}
 
+	/*
+	 * Se se conseguir determinar o IP usar a funcao getByIp
+	 */
+	private String getMacAddress() {
+		Enumeration<NetworkInterface> networkInterfaces = null;
+		try {
+			networkInterfaces = NetworkInterface.getNetworkInterfaces();
+		} catch (SocketException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		byte[] mac = null;
+		while (networkInterfaces != null && networkInterfaces.hasMoreElements()) {
+			NetworkInterface networkInterface = (NetworkInterface) networkInterfaces.nextElement();
+			
+			try {
+				mac = networkInterface.getHardwareAddress();
+			} catch (SocketException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}				
+			if (mac != null) { break; }
+		}					
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < mac.length; i++) { sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : "")); }
+		return sb.toString();
+	}
+	
 	private Long getWorkerDate(){
 		String os = System.getProperty("os.name");
 		if(os.contains("Windows"))

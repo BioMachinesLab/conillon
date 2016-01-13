@@ -408,4 +408,10 @@ public class WorkerThread extends Thread implements Observer {
 			}
 		}
 	}
+	
+	
+	public WorkerData getWorkerData() {
+		//TODO DEVsimao Test New removeWorker
+		return this.workerData;
+	}
 }
