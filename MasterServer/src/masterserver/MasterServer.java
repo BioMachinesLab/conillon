@@ -146,11 +146,19 @@ public class MasterServer {
 
 	long addWorkerData(WorkerData data, WorkerThread wt) {
 		
+		logging.Logger l = logging.Logger.getInstance();
 		//SF logging
 		try {
-			workerID = logging.Logger.getInstance().log(Event.START, data);
+			if (l.getDoLog()) {
+				workerID = l.log(Event.START, data);
+			}
+			else {
+				workerID = 0;
+			}
+			
 		} catch (Exception e) {
 			workerID = 0;	//SF default (before logging approach)
+			logging.Logger.getInstance().setDoLog(false);
 		}
 		
 		synchronized (workerDataVector) {
@@ -168,10 +176,12 @@ public class MasterServer {
 
 	void addClient(ClientData cd, ClientThread ct) {
 		
+		logging.Logger l = logging.Logger.getInstance();
 		try {
-			logging.Logger.getInstance().log(Event.START, cd);
+			if(l.getDoLog()) { l.log(Event.START, cd); };
 		} catch (Exception e) {
 			//SF Assure that application keeps running 
+			l.setDoLog(false);
 		}
 		
 		synchronized (clientDataVector) {
@@ -185,10 +195,12 @@ public class MasterServer {
 
 	void removeClient(ClientData cd) {
 		
+		logging.Logger l = logging.Logger.getInstance();
 		try {
-			logging.Logger.getInstance().log(Event.STOP, cd);
+			if(l.getDoLog()) { l.log(Event.STOP, cd); };
 		} catch (Exception e) {
 			//SF Assure that application keeps running 
+			logging.Logger.getInstance().setDoLog(false);
 		}
 		
 		
@@ -206,10 +218,12 @@ public class MasterServer {
 	
 	void removeWorker(long id, WorkerThread wt) {
 		
+		logging.Logger l = logging.Logger.getInstance();
 		try {
-			logging.Logger.getInstance().log(Event.STOP, wt.getWorkerData());
+			if(l.getDoLog()) { l.log(Event.STOP, wt.getWorkerData()); }
 		} catch (Exception e) {
 			//SF Assure that application keeps running 
+			logging.Logger.getInstance().setDoLog(false);
 		}				
 		
 		//SF the id argument was replaced by the worker data property
