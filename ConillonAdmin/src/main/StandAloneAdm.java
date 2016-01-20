@@ -1,6 +1,7 @@
 package main;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -25,9 +26,15 @@ public class StandAloneAdm extends JFrame {
 	}
 	
 	public static void main(String[] args) {
-		
-		boolean export = args.length > 1 && args[1].equals("1"); 			
-		
+		if(args.length==0){
+			args= new String[1];
+			args[0]=JOptionPane.showInputDialog("Please insert server address");
+			
+			if(args[0]==null || args[0].equals("")){
+				System.exit(0);
+			}
+		}
+		boolean export = args.length > 1 && args[1].equals("1");
 		new StandAloneAdm(args[0],export).init();
 
 	}
