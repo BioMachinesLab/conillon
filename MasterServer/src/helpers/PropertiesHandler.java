@@ -17,16 +17,24 @@ public class PropertiesHandler {
 		try {
 
 			switch (key) {
+			//File logging
 			case "logging_path":
-				return instance.properties.getProperty("logging_path");
+				return getInstance().properties.getProperty("logging_path");
 			case "file_path_worker_start":
-				return instance.properties.getProperty("file_path_worker_start");
+				return getInstance().properties.getProperty("file_path_worker_start");
 			case "file_path_worker_stop":
-				return instance.properties.getProperty("file_path_worker_stop");
+				return getInstance().properties.getProperty("file_path_worker_stop");
 			case "file_path_client_start":
-				return instance.properties.getProperty("file_path_client_start");
+				return getInstance().properties.getProperty("file_path_client_start");
 			case "file_path_client_stop":
-				return instance.properties.getProperty("file_path_client_stop");
+				return getInstance().properties.getProperty("file_path_client_stop");
+			//Database access
+			case "db_url":
+				return getInstance().properties.getProperty("db_url");
+			case "db_user_name":
+				return getInstance().properties.getProperty("db_user_name");
+			case "db_user_pass":
+				return getInstance().properties.getProperty("db_user_pass");
 			default:
 				throw new UnsupportedOperationException("key:" + key);				
 			}

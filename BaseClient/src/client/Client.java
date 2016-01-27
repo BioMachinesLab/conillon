@@ -483,6 +483,10 @@ public class Client {
 		return sb.toString();
 	}
 	
+	/**
+	 * Gets the host name
+	 * @return hte host name
+	 */
 	private String getHostName() {
 		try {
 			return InetAddress.getLocalHost().getHostName();
