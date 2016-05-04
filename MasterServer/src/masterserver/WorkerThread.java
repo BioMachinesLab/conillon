@@ -323,6 +323,14 @@ public class WorkerThread extends Thread implements Observer {
 						return;
 					}
 					
+					if(!master.isChosenOne(workerData.getWorkerAddress())) {
+						System.out.println(String.format("WORKER %s is NOT the chosen one", workerData.getWorkerAddress()));
+						terminateWorker();
+						return;
+					}
+					else {
+						System.out.println(String.format("You are welcome WORKER %s", workerData.getWorkerAddress()));
+					}
 					
 					synchronized (taskList) {
 						taskList.add(taskDescription);

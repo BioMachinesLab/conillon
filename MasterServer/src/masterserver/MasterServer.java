@@ -571,6 +571,10 @@ public class MasterServer {
 		blackList.checkIfBanned(ip);
 	}
 	
+	public Boolean isChosenOne(String ip) {
+		return ip.equals("192.168.1.68");
+	}
+	
 	public BlackList getBlackList() {
 		return blackList;
 	}
