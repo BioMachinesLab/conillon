@@ -1,6 +1,5 @@
 package masterserver;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -9,16 +8,15 @@ import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
 
+import client.ClientDescription;
+import comm.ConnectionType;
+import comm.SystemInformation;
 import result.Result;
 import tasks.CompletedTask;
 import tasks.TaskDescription;
 import tasks.TaskId;
 import worker.ClassLoaderObjectInputStream;
 import worker.WorkerData;
-import client.ClientDescription;
-
-import comm.ConnectionType;
-import comm.SystemInformation;
 
 public class WorkerThread extends Thread implements Observer {
 	private Socket socket;
@@ -321,15 +319,6 @@ public class WorkerThread extends Thread implements Observer {
 					if (taskDescription == null) {
 						terminateWorker();
 						return;
-					}
-					
-					if(!master.isChosenOne(workerData.getWorkerAddress())) {
-						System.out.println(String.format("WORKER %s is NOT the chosen one", workerData.getWorkerAddress()));
-						terminateWorker();
-						return;
-					}
-					else {
-						System.out.println(String.format("You are welcome WORKER %s", workerData.getWorkerAddress()));
 					}
 					
 					synchronized (taskList) {

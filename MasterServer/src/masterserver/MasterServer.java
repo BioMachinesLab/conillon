@@ -1,10 +1,5 @@
 package masterserver;
 
-import helpers.BlackList;
-import helpers.RoomInformation;
-import logging.Logger.Entity;
-import logging.Logger.Event;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -12,25 +7,28 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.logging.Logger;
 
-import scheduler.TaskScheduler;
-import tasks.CompletedTask;
-import tasks.TaskDescription;
-import tasks.TaskStatus;
-import worker.ClassLoaderObjectInputStream;
-import worker.WorkerData;
 import client.ClientData;
 import client.ClientDescription;
 import comm.ClientPriority;
 import comm.ConnectionType;
 import comm.InfrastructureInformation;
+import helpers.BlackList;
+import helpers.RoomInformation;
+import logging.Logger.Event;
+import scheduler.IParallelizator;
+import scheduler.TaskScheduler;
+import scheduler.YaTaskScheduler;
+import tasks.CompletedTask;
+import tasks.TaskDescription;
+import tasks.TaskStatus;
+import worker.ClassLoaderObjectInputStream;
+import worker.WorkerData;
 
 public class MasterServer {
 
@@ -65,7 +63,9 @@ public class MasterServer {
 
 	private CanceledTaskObserver taskObserver = new CanceledTaskObserver();
 
-	private TaskScheduler taskScheduler = new TaskScheduler();
+	//TODO DEVsgf	conversion to interface usage
+	//private TaskScheduler taskScheduler = new TaskScheduler();	//OLD
+	private IParallelizator taskScheduler = new YaTaskScheduler();
 	
 	private BlackList blackList;
 	private RoomInformation roomsInformation;
@@ -92,7 +92,7 @@ public class MasterServer {
 		connectCodeServer();
 
 		new Thread(new Runnable() {
-
+			//TODO DEVsimao check Master Server Thread behavior
 			@Override
 			public void run() {
 				try {
@@ -103,7 +103,7 @@ public class MasterServer {
 									.values()) {
 								workerData.increaseTime();
 								if (workerData.getNumberOfRequestedTasks() > 0
-										&& workerData.getTimeSinceLastTask() > 3 * 60) {
+										&& workerData.getTimeSinceLastTask() > 3 * 60) {	//TODO DEVsimao If requested tasks > 0 AND time since last task > 180: BAN
 									synchronized (workerThread) {
 										if (workerThread.containsKey(workerData
 												.getId())) {
@@ -569,10 +569,6 @@ public class MasterServer {
 
 	public void checkIfBanned(String ip){
 		blackList.checkIfBanned(ip);
-	}
-	
-	public Boolean isChosenOne(String ip) {
-		return ip.equals("192.168.1.68");
 	}
 	
 	public BlackList getBlackList() {

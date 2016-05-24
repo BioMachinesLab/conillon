@@ -3,20 +3,14 @@ package scheduler;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import comm.ClientPriority;
 import tasks.CompletedTask;
 import tasks.TaskDescription;
 import worker.WorkerData;
 
-import comm.ClientPriority;
+public class YaTaskScheduler implements IParallelizator {
 
-public class TaskScheduler implements IParallelizator {
-	private int numberOfSendTasks = 0;
-	// private LinkedList<TaskDescription> lastUsedLinkedList = null;
-	private int position = 0;
-	private LinkedList<ClientTasks> pendingTasks = new LinkedList<TaskScheduler.ClientTasks>();
-	private LinkedList<TaskDescription> resendTasks = new LinkedList<TaskDescription>();
-	private LinkedList<WorkerTasks> workingTasks = new LinkedList<WorkerTasks>();
-
+	//PUBLIC METHODS: BEGGINING
 	@Override
 	public LinkedList<Long> taskDone(CompletedTask task) {
 		synchronized (workingTasks) {
@@ -33,10 +27,6 @@ public class TaskScheduler implements IParallelizator {
 		return null;
 	}
 
-	/**
-	 * DEVsgf
-	 * Old method to get task to worker
-	 */
 	@Override
 	public TaskDescription getTask(WorkerData workerData) throws InterruptedException {
 		// choose best
@@ -49,20 +39,117 @@ public class TaskScheduler implements IParallelizator {
 		}
 		addToWorkingTasks(task, workerData.getId());
 		return task;
-	}	
+	}
 
-	private void addToWorkingTasks(TaskDescription task, long id) {
-		synchronized (workingTasks) {
-			for (WorkerTasks wt : workingTasks) {
-				if (wt.task == task) {
-					wt.add(id);
-					return;
-				}
-			}
-			workingTasks.addFirst(new WorkerTasks(task, id));
+	@Override
+	public int getNumberOfSendedTasks() {
+		return numberOfSendTasks;
+	}
+
+	@Override
+	public void addToResend(TaskDescription task) {
+		synchronized (resendTasks) {
+			resendTasks.add(task);
 		}
 	}
 
+	@Override
+	public void addTaskList(LinkedList<TaskDescription> taskList, int clientID, ClientPriority priority) {
+		synchronized (pendingTasks) {
+			for (ClientTasks tasks : pendingTasks) {
+				if (tasks.getClientID() == clientID) {
+					tasks.addAll(taskList);
+					synchronized (this) {
+						notifyAll();
+					}
+					return;
+				}
+			}
+		}
+		ClientTasks newClient = new ClientTasks(clientID, priority.ordinal(), taskList);
+
+		synchronized (pendingTasks) {
+			pendingTasks.add(newClient);
+		}
+		synchronized (this) {
+			notifyAll();
+		}
+	}
+
+	@Override
+	public void addTask(TaskDescription task) {
+		long clientID = task.getId();
+		synchronized (pendingTasks) {
+
+			for (ClientTasks tasks : pendingTasks) {
+				if (tasks.getClientID() == clientID) {
+					tasks.add(task);
+					synchronized (this) {
+						notifyAll();
+					}
+					return;
+				}
+			}
+		}
+		ClientTasks newClient = new ClientTasks(task.getId(), task.getPriority().ordinal());
+		newClient.add(task);
+
+		synchronized (pendingTasks) {
+			pendingTasks.add(newClient);
+		}
+		synchronized (this) {
+			notifyAll();
+		}
+
+	}
+
+	@Override
+	public void removeClientTasks(long clientID) {
+		System.out.println(
+				"before client exited: " + pendingTasks.size() + " " + resendTasks.size() + " " + workingTasks.size());
+		synchronized (pendingTasks) {
+			Iterator<ClientTasks> iterator = pendingTasks.iterator();
+			while (iterator.hasNext()) {
+				if (iterator.next().getClientID() == clientID) {
+					iterator.remove();
+					resetPosition();
+					// return;
+				}
+			}
+			pendingTasks.remove(clientID);
+		}
+		synchronized (workingTasks) {
+			Iterator<WorkerTasks> iterator = workingTasks.iterator();
+			while (iterator.hasNext()) {
+				if (iterator.next().getTask().getClient().getID() == clientID) {
+					iterator.remove();
+					// return;
+				}
+			}
+		}
+		System.out.println(
+				"after client exited: " + pendingTasks.size() + " " + resendTasks.size() + " " + workingTasks.size());
+
+	}
+	
+	@Override
+	public void removeWorker(long id) {
+		synchronized (workingTasks) {
+			Iterator<WorkerTasks> iterator = workingTasks.iterator();
+			while (iterator.hasNext()) {
+				WorkerTasks task = iterator.next();
+				if (!task.taskNotOnWorker(id)) {
+					task.remove(new Long(id));
+				}
+			}
+		}
+		synchronized (this) {
+			notifyAll();
+		}
+	}
+	//PUBLIC METHODS: END
+	
+	//PRIVATE METHODS: BEGGINING
 	private TaskDescription getNextTask(WorkerData workerData) {
 		synchronized (resendTasks) {
 			Iterator<TaskDescription> iterator = resendTasks.iterator();
@@ -101,91 +188,17 @@ public class TaskScheduler implements IParallelizator {
 		}
 		return null;
 	}
-
-	@Override
-	public int getNumberOfSendedTasks() {
-		return numberOfSendTasks;
-	}
-	@Override
-	public void addToResend(TaskDescription task) {
-		synchronized (resendTasks) {
-			resendTasks.add(task);
-		}
-	}
-	@Override
-	public void addTaskList(LinkedList<TaskDescription> taskList, int clientID, ClientPriority priority) {
-		synchronized (pendingTasks) {
-			for (ClientTasks tasks : pendingTasks) {
-				if (tasks.getClientID() == clientID) {
-					tasks.addAll(taskList);
-					synchronized (this) {
-						notifyAll();
-					}
-					return;
-				}
-			}
-		}
-		ClientTasks newClient = new ClientTasks(clientID, priority.ordinal(), taskList);
-
-		synchronized (pendingTasks) {
-			pendingTasks.add(newClient);
-		}
-		synchronized (this) {
-			notifyAll();
-		}
-
-	}
-	@Override
-	public void addTask(TaskDescription task) {
-		long clientID = task.getId();
-		synchronized (pendingTasks) {
-
-			for (ClientTasks tasks : pendingTasks) {
-				if (tasks.getClientID() == clientID) {
-					tasks.add(task);
-					synchronized (this) {
-						notifyAll();
-					}
-					return;
-				}
-			}
-		}
-		ClientTasks newClient = new ClientTasks(task.getId(), task.getPriority().ordinal());
-		newClient.add(task);
-
-		synchronized (pendingTasks) {
-			pendingTasks.add(newClient);
-		}
-		synchronized (this) {
-			notifyAll();
-		}
-	}
-	@Override
-	public void removeClientTasks(long clientID) {
-		System.out.println(
-				"before client exited: " + pendingTasks.size() + " " + resendTasks.size() + " " + workingTasks.size());
-		synchronized (pendingTasks) {
-			Iterator<ClientTasks> iterator = pendingTasks.iterator();
-			while (iterator.hasNext()) {
-				if (iterator.next().getClientID() == clientID) {
-					iterator.remove();
-					resetPosition();
-					// return;
-				}
-			}
-			pendingTasks.remove(clientID);
-		}
+	
+	private void addToWorkingTasks(TaskDescription task, long id) {
 		synchronized (workingTasks) {
-			Iterator<WorkerTasks> iterator = workingTasks.iterator();
-			while (iterator.hasNext()) {
-				if (iterator.next().getTask().getClient().getID() == clientID) {
-					iterator.remove();
-					// return;
+			for (WorkerTasks wt : workingTasks) {
+				if (wt.task == task) {
+					wt.add(id);
+					return;
 				}
 			}
+			workingTasks.addFirst(new WorkerTasks(task, id));
 		}
-		System.out.println(
-				"after client exited: " + pendingTasks.size() + " " + resendTasks.size() + " " + workingTasks.size());
 	}
 	
 	private void resetPosition() {
@@ -194,7 +207,40 @@ public class TaskScheduler implements IParallelizator {
 			position = 0;
 		}
 	}
-
+	
+	//PRIVATE METHODS: END
+	
+	/**
+	 * Default constructor
+	 */
+	public YaTaskScheduler() {
+		this.workingTasks = new LinkedList<WorkerTasks>();
+		this.resendTasks = new LinkedList<TaskDescription>();
+		this.pendingTasks = new LinkedList<ClientTasks>();
+		this.position = 0;
+		this.numberOfSendTasks = 0;
+	}
+	
+	//Attributes
+	/**
+	 * 
+	 */
+	private LinkedList<WorkerTasks> workingTasks;
+	/**
+	 * 
+	 */
+	private LinkedList<TaskDescription> resendTasks;
+	private LinkedList<ClientTasks> pendingTasks;
+	private int position;
+	private int numberOfSendTasks;
+	
+	
+	//Auxiliary classes: BEGGINING
+	/**
+	 * 
+	 * @author Simão Fernandes
+	 *
+	 */
 	private class WorkerTasks {
 		private TaskDescription task;
 		private LinkedList<Long> workers = new LinkedList<Long>();
@@ -221,6 +267,7 @@ public class TaskScheduler implements IParallelizator {
 			workers.add(client);
 		}
 
+		@SuppressWarnings("unused")
 		public void remove(Long client) {
 			workers.remove(client);
 		}
@@ -234,7 +281,11 @@ public class TaskScheduler implements IParallelizator {
 		}
 
 	}
-
+	/**
+	 * 
+	 * @author Simão Fernandes
+	 *
+	 */
 	private class ClientTasks {
 		private long clientID;
 		private int priority;
@@ -276,20 +327,5 @@ public class TaskScheduler implements IParallelizator {
 		}
 
 	}
-	@Override
-	public void removeWorker(long id) {
-		synchronized (workingTasks) {
-			Iterator<WorkerTasks> iterator = workingTasks.iterator();
-			while (iterator.hasNext()) {
-				WorkerTasks task = iterator.next();
-				if (!task.taskNotOnWorker(id)) {
-					task.remove(new Long(id));
-				}
-			}
-		}
-		synchronized (this) {
-			notifyAll();
-		}
-	}
-
+	//Auxiliary classes: END
 }
