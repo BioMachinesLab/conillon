@@ -29,6 +29,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
+import benchmark.BenchmarkHandler;
+import benchmark.BenchmarkOutput;
 import main.GuiClientInfoUpdater;
 import result.Result;
 import tasks.CachedTask;
@@ -99,6 +101,8 @@ public class Worker {
 	public static int myNumber = 0;
 	static String folderLocation = "conilon";//"C:\\";
 	
+	private BenchmarkOutput benchmarkOutput;
+	
 	public Worker(boolean isRestricted, GuiClientInfoUpdater guiUpdater) {
 		this.isRestricted = isRestricted;
 		this.guiUpdater = guiUpdater;
@@ -133,7 +137,8 @@ public class Worker {
 		this.execSvc = Executors.newFixedThreadPool(numberofCores);
 
 		getLocalHostInfo();
-		connectCodeServer();
+		runBenchmark();
+		connectCodeServer();		
 		connectMasterServer();
 
 		restarter = new Restarter();
@@ -303,6 +308,17 @@ public class Worker {
 		for (int i = 0; i < mac.length; i++) { sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : "")); }
 		return sb.toString();
 	}
+	
+	/**
+	 * Runs the benchmark
+	 */
+	private void runBenchmark() {
+		Task task = new BenchmarkHandler();
+		TaskId taskId = new TaskId(-1, -1);		
+		WorkerThread workerThread = new WorkerThread(task, taskId, true);
+		execSvc.submit(workerThread);
+	}
+	
 	
 	private Long getWorkerDate(){
 		String os = System.getProperty("os.name");
@@ -679,10 +695,17 @@ public class Worker {
 		private Task task;
 		private TaskId tid;
 		private MyUncaughtExceptionHandler handler = new MyUncaughtExceptionHandler();
+		private Boolean isBenchmark;
 
 		public WorkerThread(Task task, TaskId tid) {
 			this.task = task;
 			this.tid = tid;
+			this.isBenchmark = false;
+		}
+		
+		public WorkerThread(Task task, TaskId tid, Boolean isBenchmark) {
+			this(task, tid);
+			this.isBenchmark = isBenchmark;
 		}
 
 		public void run() {
@@ -717,62 +740,52 @@ public class Worker {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 						// TODO Auto-generated catch block
-
-						// e.printStackTrace(out);
 					}
-					// if (thread.getException() != null) {
-					// result = new Result();
-					// result.setException(thread.getException());
-					// } else {
-					// if(!thread.isDone()){
-					// System.exit(1);
-					// }
-					// result = task.getResult();
-					// }
 
-					// if(result == null){
-					// result = new Result() {};
-					// }
 
 					if (thread.isDone() || thread.getException() != null) {
 
 						result = thread.getResult();
-
-						// result.setException(thread.getException());
-
 						flag = true;
 						elapsedTime = System.currentTimeMillis() - startTime;
 						// out.println("Elapsed time - task related:"+elapsedTime);
-
 						Date date = new Date();
 						String endTime = dateFormat.format(date);
 //						System.out.println("Finalizing....");
-						synchronized (workerData) {
-							workerData.setNumberOfTasksProcessed();
-							workerData.setTotalTimeSpentFarming(elapsedTime);
-							workerData.setRunning(false);
-							workerData.setLastTaskTime(elapsedTime);
-							workerData.setEndTime(endTime);
-							workerData.setWorkerStatus("Stopped...");
-							if (result != null && !thread.hasBeenKilled()) {
-								
-								synchronized (socketOut) {
-									socketOut
-											.writeObject(ConnectionType.WORKER_RESULTS);
-									socketOut.writeObject(tid);
-									socketOut.writeObject(result);
-									socketOut.writeObject(workerData);
-									// out.println("\n - enviar" +
-									// task.toString()
-									// + " C" + tid.getClientID());
-									socketOut.reset();
-									guiUpdater.updateClientInfo(workerData);
-									myNumber--;
+						
+						if (!isBenchmark) {
+							synchronized (workerData) {
+								workerData.setNumberOfTasksProcessed();
+								workerData.setTotalTimeSpentFarming(elapsedTime);
+								workerData.setRunning(false);
+								workerData.setLastTaskTime(elapsedTime);
+								workerData.setEndTime(endTime);
+								workerData.setWorkerStatus("Stopped...");
+								if (result != null && !thread.hasBeenKilled()) {
+									
+									synchronized (socketOut) {
+										socketOut
+												.writeObject(ConnectionType.WORKER_RESULTS);
+										socketOut.writeObject(tid);
+										socketOut.writeObject(result);
+										socketOut.writeObject(workerData);
+										// out.println("\n - enviar" +
+										// task.toString()
+										// + " C" + tid.getClientID());
+										socketOut.reset();
+										guiUpdater.updateClientInfo(workerData);
+										myNumber--;
+									}
 								}
 							}
 						}
+						else {
+							benchmarkOutput = new BenchmarkOutput();
+							benchmarkOutput.setElapsedTime(elapsedTime);
+						}
+						
 //						System.out.println("Everything OK!");
-					}else {
+					} else {
 //						System.out.println("KILLED not ended...");
 					}
 					synchronized (currentTask) {
