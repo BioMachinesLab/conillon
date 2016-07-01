@@ -2,8 +2,10 @@ package scheduler;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import comm.ClientPriority;
+import dataaccess.DbHandler;
 import tasks.CompletedTask;
 import tasks.TaskDescription;
 import worker.WorkerData;
@@ -151,16 +153,56 @@ public class YaTaskScheduler implements IParallelizator {
 	
 	//PRIVATE METHODS: BEGGINING
 	private TaskDescription getNextTask(WorkerData workerData) {
+		
+		this.checkWorkersStats();
+		
+		TaskDescription taskDesc = handleResendTasks(workerData);
+		if (taskDesc != null) {
+			return taskDesc;
+		}
+		
+		taskDesc = handlePendingTasks();
+		if (taskDesc != null) {
+			return taskDesc;
+		}
+		
+		return handleWorkingTasks(workerData);
+	}
+		
+	private void checkWorkersStats() {
+		
+		List<dataaccess.dataobjects.Worker> workersDO =	
+				DbHandler.getWorkersStats();
+	}
+	
+	
+	/**
+	 * Handles the set of tasks to resend
+	 * @param workerData
+	 * @return
+	 */
+	private TaskDescription handleResendTasks(WorkerData workerData) {
 		synchronized (resendTasks) {
 			Iterator<TaskDescription> iterator = resendTasks.iterator();
-			while (iterator.hasNext()) {
-				TaskDescription task = iterator.next();
-				if (task.getLastWorkerId() != workerData.getId()) {
+			while (iterator.hasNext()) {						 
+				TaskDescription taskDesc = iterator.next();
+				
+				taskDesc.getNumberOfTasks();
+				
+				
+				if (taskDesc.getLastWorkerId() != workerData.getId()) {
 					iterator.remove();
-					return task;
+					return taskDesc;
 				}
 			}
 		}
+		return null;
+	}
+	/**
+	 * Handles the pending tasks set
+	 * @return
+	 */
+	private TaskDescription handlePendingTasks() {
 		synchronized (pendingTasks) {
 			if (pendingTasks.size() > 0) {
 				ClientTasks clientTasks = pendingTasks.get(position);
@@ -177,6 +219,14 @@ public class YaTaskScheduler implements IParallelizator {
 				return task;
 			}
 		}
+		return null;
+	}
+	/**
+	 * Handles the working tasks set
+	 * @param workerData
+	 * @return
+	 */
+	private TaskDescription handleWorkingTasks(WorkerData workerData) {
 		synchronized (workingTasks) {
 			for (WorkerTasks wt : workingTasks) {
 
@@ -267,7 +317,6 @@ public class YaTaskScheduler implements IParallelizator {
 			workers.add(client);
 		}
 
-		@SuppressWarnings("unused")
 		public void remove(Long client) {
 			workers.remove(client);
 		}

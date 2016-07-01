@@ -14,7 +14,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
@@ -27,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import benchmark.BenchmarkHandler;
@@ -36,8 +36,6 @@ import result.Result;
 import tasks.CachedTask;
 import tasks.Task;
 import tasks.TaskId;
-import worker.Worker.FeedWorker;
-import worker.Worker.GetTasks;
 import worker.Worker.WorkerThread.TaskThread;
 import comm.ConnectionType;
 import comm.FileProvider;
@@ -54,7 +52,7 @@ public class Worker {
 	private PrintStream out;
 	boolean keepRunning = true;
 	boolean screenSaverMode = false;
-	private float workerEvaluation = 0;;
+	private float workerEvaluation = 0;
 	private int mainWorkerID;
 	private InfrastructureInformation infrastructureInformation;
 
@@ -134,10 +132,10 @@ public class Worker {
 		this.numberOfAllowedCache = new Semaphore(cacheSize); // cachesize
 		this.numberOfAllowedThreads = new Semaphore(numberOfCores);
 		this.oneTaskAtTime = new Semaphore(1);
-		this.execSvc = Executors.newFixedThreadPool(numberofCores);
+		//this.execSvc = Executors.newFixedThreadPool(numberofCores);
 
-		getLocalHostInfo();
 		runBenchmark();
+		getLocalHostInfo();
 		connectCodeServer();		
 		connectMasterServer();
 
@@ -272,6 +270,13 @@ public class Worker {
 			Long workerDate = getWorkerDate();
 			this.workerData.setJarDate(workerDate);
 			
+			if (this.benchmarkOutput == null) {
+				System.out.println("Benchmark is null");
+			}
+			else {
+				this.workerData.setPerformance(this.benchmarkOutput.getElapsedTime());
+			}
+			
 			out.println(localhostinfo.toString());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -315,8 +320,18 @@ public class Worker {
 	private void runBenchmark() {
 		Task task = new BenchmarkHandler();
 		TaskId taskId = new TaskId(-1, -1);		
-		WorkerThread workerThread = new WorkerThread(task, taskId, true);
+		WorkerThread workerThread = new WorkerThread(task, taskId, true);		
+		if (execSvc == null || execSvc.isShutdown()) {
+			execSvc = Executors.newFixedThreadPool(numberofCores);
+		}		
 		execSvc.submit(workerThread);
+		execSvc.shutdown();
+		try {
+			execSvc.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -638,18 +653,17 @@ public class Worker {
 
 		public void run() {
 			try {
+				
+				if (execSvc == null || execSvc.isShutdown()) {
+					execSvc = Executors.newFixedThreadPool(numberofCores);
+				}
+				
 				while (on) {
 					numberOfAllowedThreads.acquire();
 					CachedTask cachedTask = getTask();
-					// execSvc.execute( new
-					// WorkerThread(cachedTask.getTask(),cachedTask.getTaskid()));
-					
-//					System.out.println("starting new task: " + cachedTask.getTaskid());
 
-					
 					execSvc.submit(new WorkerThread(cachedTask.getTask(),
-							cachedTask.getTaskid()));
-					// wt.start();
+							cachedTask.getTaskid()));					
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace(out);
@@ -938,7 +952,9 @@ public class Worker {
 		taskGetter.interrupt();
 		taskFeeder.interrupt();
 
-		execSvc.shutdownNow();
+		if (execSvc != null || !execSvc.isShutdown()) {
+			execSvc.shutdownNow();
+		}
 
 		synchronized (currentTask) {
 			for (Thread thread : currentTask.values()) {

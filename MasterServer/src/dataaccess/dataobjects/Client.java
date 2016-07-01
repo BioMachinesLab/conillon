@@ -66,8 +66,11 @@ public class Client {
 	/**
 	 * @return the average_speed
 	 */
-	public double getAverage_speed() {
+	public double getAverageSpeed() {
 		return average_speed;
+	}
+	public String getFormattedAverageSpeed() {
+		return Double.toString(average_speed).replace(',', '.');
 	}
 	/**
 	 * @param average_speed the average_speed to set

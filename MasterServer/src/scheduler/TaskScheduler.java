@@ -65,37 +65,37 @@ public class TaskScheduler implements IParallelizator {
 
 	private TaskDescription getNextTask(WorkerData workerData) {
 		synchronized (resendTasks) {
-			Iterator<TaskDescription> iterator = resendTasks.iterator();
-			while (iterator.hasNext()) {
-				TaskDescription task = iterator.next();
-				if (task.getLastWorkerId() != workerData.getId()) {
-					iterator.remove();
+			Iterator<TaskDescription> iterator = resendTasks.iterator();		//for the resent task vector
+			while (iterator.hasNext()) {										//for the current task
+				TaskDescription task = iterator.next();							//	if the last worker was not the
+				if (task.getLastWorkerId() != workerData.getId()) {				//	current worker
+					iterator.remove();											//		remove and return the task
 					return task;
 				}
 			}
 		}
 		synchronized (pendingTasks) {
-			if (pendingTasks.size() > 0) {
-				ClientTasks clientTasks = pendingTasks.get(position);
-				TaskDescription task = clientTasks.getNextTask();
+			if (pendingTasks.size() > 0) {										//for the pending tasks (Client Tasks list)
+				ClientTasks clientTasks = pendingTasks.get(position);			//get the ClientTasks instance at position 'position'
+				TaskDescription task = clientTasks.getNextTask();				//gets the nest task from ClientTasks instance
 				if (clientTasks.isEmpty()) {
-					pendingTasks.remove(position);
-					resetPosition();
+					pendingTasks.remove(position);								//handle empty client tasks
+					resetPosition();											
 				} else {
 					numberOfSendTasks++;
-					if (numberOfSendTasks > clientTasks.getClientPriority())
-						position = (position + 1) % pendingTasks.size();
+					if (numberOfSendTasks > clientTasks.getClientPriority())	//if nb of sent task if bigger than client priority
+						position = (position + 1) % pendingTasks.size();		//redefine client position
 
 				}
-				return task;
+				return task;													//return the task
 			}
 		}
 		synchronized (workingTasks) {
 			for (WorkerTasks wt : workingTasks) {
 
-				if ((wt.getNumberWorkers() == 0 || wt.getNumberWorkers() == 1)
-						&& wt.taskNotOnWorker(workerData.getId())) {
-					return wt.task;
+				if ((wt.getNumberWorkers() == 0 || wt.getNumberWorkers() == 1)	//if nb workers is 0 or 1 for the current working task
+						&& wt.taskNotOnWorker(workerData.getId())) {			//and if task not on current worker
+					return wt.task;												//return the task
 				}
 			}
 		}

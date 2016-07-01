@@ -7,6 +7,11 @@ import comm.RunMode;
 
 public class WorkerData implements Serializable {
 
+	/**
+	 * 
+	 */
+	//private static final long serialVersionUID = 1L;
+
 	//TODO: Find a way to remove this
 	public static final int CONILLON_VERSION = 10;
 
@@ -34,6 +39,10 @@ public class WorkerData implements Serializable {
 	private int numberOfRequestedTasks = 0;
 	
 	private Long jarDate;
+
+	private long speed;
+	private long performance;
+	
 
 	public WorkerData() {
 		super();
@@ -226,6 +235,22 @@ public class WorkerData implements Serializable {
 
 	public synchronized void setJarDate(Long jarDate) {
 		this.jarDate = jarDate;
+	}
+	
+	public synchronized long getSpeed() {
+		return speed;
+	}
+
+	public synchronized void setSpeed(long speed) {
+		this.speed = speed;
+	}
+	
+	public synchronized long getPerformance() {
+		return performance;
+	}
+
+	public synchronized void setPerformance(long performance) {
+		this.performance = performance;
 	}
 	
 	@Override

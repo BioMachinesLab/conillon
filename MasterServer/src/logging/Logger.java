@@ -64,7 +64,7 @@ public class Logger {
 				String.format("%d,%d,%s,%d,%s", //%1$,.2f
 							  clientDo.getId(), 
 							  clientDo.getTotal_tasks(),
-							  clientDo.getAverage_speed(),							  
+							  clientDo.getFormattedAverageSpeed(),							  
 							  clientDo.getTotal_running_time(), 
 							  getTimestamp()
 							  ));

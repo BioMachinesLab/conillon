@@ -22,7 +22,6 @@ import helpers.BlackList;
 import helpers.RoomInformation;
 import logging.Logger.Event;
 import scheduler.IParallelizator;
-import scheduler.TaskScheduler;
 import scheduler.YaTaskScheduler;
 import tasks.CompletedTask;
 import tasks.TaskDescription;

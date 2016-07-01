@@ -6,8 +6,10 @@ import java.io.Serializable;
 import comm.ClientPriority;
 
 public class ClientDescription implements Comparable<ClientDescription>,Serializable {
-	private int numberOfTasksEvaluated = 0;
-	private int numberOfTasksDelivered = 0;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -672335622269551091L;	
 	
 	private int totalNumberOfTasksDone = 0;
 	private ClientPriority priority;

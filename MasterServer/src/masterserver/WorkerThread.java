@@ -9,10 +9,13 @@ import java.util.Observable;
 import java.util.Observer;
 
 import client.ClientDescription;
+import comm.ClientPriority;
 import comm.ConnectionType;
 import comm.SystemInformation;
 import result.Result;
+import st001.benchmark.BenchmarkHandler;
 import tasks.CompletedTask;
+import tasks.Task;
 import tasks.TaskDescription;
 import tasks.TaskId;
 import worker.ClassLoaderObjectInputStream;
@@ -77,15 +80,18 @@ public class WorkerThread extends Thread implements Observer {
 			// System.out.println("Sent worker data back");
 			out.reset();
 
-			pingpong.start();
+						
+			pingpong.start();						
+			//setBenchmark();
 			feedWorker.start();
 			ConnectionType type;
 			while (socket.isConnected()) {
-				type = (ConnectionType) in.readObject();
+				type = (ConnectionType) in.readObject();			//java.net.SocketException: Connection reset
 				
 				switch (type) {
 				case WORKER_FEED:
 					feedWorker.feedAnotherTask();
+					//feedWorker.feedThatTask();
 					break;
 				case WORKER_RESULTS:
 					socketInFlag = true;
@@ -175,7 +181,13 @@ public class WorkerThread extends Thread implements Observer {
 				case PONG:
 					pingpong.acknolegde();
 					break;
+				case WORKER_CANCEL_CLIENT_TASK:
+				case WORKER_FEED_IN_PROGRESS:
+				default:
+					throw new UnsupportedOperationException();
 				}
+				
+				
 			}
 
 		} catch (Exception e) {
@@ -186,10 +198,37 @@ public class WorkerThread extends Thread implements Observer {
 		System.out.println("Worker Done!!" + workerID);
 	}
 
+	private void setBenchmark() {
+		
+		TaskDescription taskDescription;
+		
+		Task task = new BenchmarkHandler();
+		int clientId = 1;		
+		ClientDescription clientDescription = new ClientDescription(clientId, ClientPriority.HIGH, out);
+					
+		taskDescription = new TaskDescription(task, clientDescription, clientDescription.getID());
+		
+		synchronized (out) {
+			
+			try {
+				sendingData = true;
+				out.writeObject(ConnectionType.FEED_WORKER);
+				out.writeObject(new TaskId(taskDescription.getId(), taskDescription.getTaskId()));
+				out.writeObject(taskDescription.getTask());
+				//out.reset();
+				sendingData = false;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+		}
+	}
+	
+	
 	private class PingPong extends Thread {
 		private int flag = 0;
 
-		private final static int TIME_OUT = 5000;
+		private final static int TIME_OUT = 50000;
 		private static final int TIME_TO_SEND_NEXT_PING = 7000;
 
 		public synchronized void waiter() throws InterruptedException {
@@ -308,6 +347,11 @@ public class WorkerThread extends Thread implements Observer {
 				while (true) {
 					TaskDescription taskDescription;
 					
+//					Task task = new BenchmarkHandler();
+//					int clientId = 0;		
+//					ClientDescription clientDescription = new ClientDescription(clientId, ClientPriority.HIGH, out);						
+//					taskDescription = new TaskDescription(task, clientDescription, clientDescription.getID());
+					
 					synchronized (this) {
 						while (numberOfTasksToFeed <= 0) {
 							wait();
@@ -325,14 +369,19 @@ public class WorkerThread extends Thread implements Observer {
 						taskList.add(taskDescription);
 					}
 					workerData.increaseNumberOfRequestedTasks();
-				
+					
 					synchronized (out) {
 						sendingData = true;
-						out.writeObject(ConnectionType.FEED_WORKER);
-						out.writeObject(new TaskId(taskDescription.getId(),
-								taskDescription.getTaskId()));
-						out.writeObject(taskDescription.getTask());
-						out.reset();
+						
+						try {
+							out.writeObject(ConnectionType.FEED_WORKER);
+							out.writeObject(new TaskId(taskDescription.getId(), taskDescription.getTaskId()));
+							out.writeObject(taskDescription.getTask());						
+							out.reset();
+						} catch (Exception e) {
+							// TODO: handle exception
+							e.printStackTrace();
+						}						
 						sendingData = false;
 					}
 				}
