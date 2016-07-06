@@ -79,10 +79,14 @@ public class DbHandler {
 			conn = DriverManager.getConnection(dbUrl, dbUserName, dbUserPass);
 
 			cStmt = conn.prepareCall(
-					String.format("{CALL PCNLWRK00iIns_NewWorker (\"%s\", \"%s\",\"%s\", %d, \"%s\", %d, %d)}",
-							dbWorker.getIp(), dbWorker.getMac_address(), dbWorker.getHost_name(),
-							dbWorker.getNum_cores(), dbWorker.getOperative_system(), 0, // id
-																						// room
+					String.format("{CALL PCNLWRK00iIns_NewWorker (\"%s\", \"%s\",\"%s\", %d, \"%s\", %d, %d, %d)}",
+							dbWorker.getIp(), 
+							dbWorker.getMac_address(), 
+							dbWorker.getHost_name(),
+							dbWorker.getNum_cores(), 
+							dbWorker.getOperative_system(),
+							dbWorker.getPerformance(),
+							0, // id																						//room
 							0)); // is banned
 
 			result = cStmt.executeQuery();
@@ -205,18 +209,13 @@ public class DbHandler {
 	}
 	
 	
-	public static List<dataaccess.dataobjects.Worker> getWorkersStats() {
+	public static List<dataaccess.dataobjects.Worker> getWorkersStatsOrderedByPerformanceDesc() {
 		StringBuilder query = new StringBuilder();
-		query.append("SELECT WRK.id, WRK.ip, WRK.host_name, WRK.num_cores, WRK.average_time, WRK.average_speed ")
+		query.append("SELECT WRS.oid AS id, WRK.ip, WRK.host_name, WRK.num_cores, WRS.performance ")
 		.append("FROM VCNLWRK01_Worker WRK ")
+		.append("INNER JOIN VCNLWKS01_WorkerSession WRS ON WRK.oid = WRS.oidWorker AND WRS.stop_time_stamp IS NULL ")
 		.append("WHERE WRK.is_banned <> 1 ")
-		.append("AND WRK.expired_timestamp IS NULL ")
-		.append("AND EXISTS(")
-		.append("		SELECT 1 ")
-		.append("		FROM  VCNLWKS01_WorkerSession WRS ")
-		.append("		WHERE WRK.oid = WRS.oidWorker ")
-		.append("		AND WRS.stop_time_stamp IS NULL")
-		.append(")");
+		.append("ORDER BY performance DESC");
 		
 		List<Map<String, Object>> table = executeQuery(query.toString());
 		if (table == null) {

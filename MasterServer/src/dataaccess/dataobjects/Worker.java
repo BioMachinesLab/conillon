@@ -41,8 +41,10 @@ public class Worker {
 			setOperative_system(row.get("operative_system"));
 		}
 		if (row.containsKey("total_running_time")) {
-			setTotal_running_time(row.get("total_running_time"));
-			
+			setTotal_running_time(row.get("total_running_time"));		
+		}
+		if (row.containsKey("performance")) {
+			setPerformance(row.get("performance"));
 		}
 	}
 	
@@ -163,6 +165,18 @@ public class Worker {
 	public void setOperative_system(Object operative_system) {
 		this.operative_system = operative_system != null ? operative_system.toString() : null;
 	}
+	
+	private long performance;
+	public long getPerformance() {
+		return performance;
+	}
+	public void setPerformance(long performance) {
+		this.performance = performance;
+	}
+	public void setPerformance(Object performance) {
+		this.performance = performance != null ? (long)performance : 0;
+	}
+	
 	
 	//TODO DEVsimao DEPRECATED
 	private long tasks_processed;

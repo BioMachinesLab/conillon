@@ -9,13 +9,10 @@ import java.util.Observable;
 import java.util.Observer;
 
 import client.ClientDescription;
-import comm.ClientPriority;
 import comm.ConnectionType;
 import comm.SystemInformation;
 import result.Result;
-import st001.benchmark.BenchmarkHandler;
 import tasks.CompletedTask;
-import tasks.Task;
 import tasks.TaskDescription;
 import tasks.TaskId;
 import worker.ClassLoaderObjectInputStream;
@@ -90,8 +87,7 @@ public class WorkerThread extends Thread implements Observer {
 				
 				switch (type) {
 				case WORKER_FEED:
-					feedWorker.feedAnotherTask();
-					//feedWorker.feedThatTask();
+					feedWorker.feedAnotherTask();					
 					break;
 				case WORKER_RESULTS:
 					socketInFlag = true;
@@ -198,33 +194,6 @@ public class WorkerThread extends Thread implements Observer {
 		System.out.println("Worker Done!!" + workerID);
 	}
 
-	private void setBenchmark() {
-		
-		TaskDescription taskDescription;
-		
-		Task task = new BenchmarkHandler();
-		int clientId = 1;		
-		ClientDescription clientDescription = new ClientDescription(clientId, ClientPriority.HIGH, out);
-					
-		taskDescription = new TaskDescription(task, clientDescription, clientDescription.getID());
-		
-		synchronized (out) {
-			
-			try {
-				sendingData = true;
-				out.writeObject(ConnectionType.FEED_WORKER);
-				out.writeObject(new TaskId(taskDescription.getId(), taskDescription.getTaskId()));
-				out.writeObject(taskDescription.getTask());
-				//out.reset();
-				sendingData = false;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-		}
-	}
-	
-	
 	private class PingPong extends Thread {
 		private int flag = 0;
 

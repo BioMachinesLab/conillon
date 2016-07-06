@@ -154,7 +154,15 @@ public class YaTaskScheduler implements IParallelizator {
 	//PRIVATE METHODS: BEGGINING
 	private TaskDescription getNextTask(WorkerData workerData) {
 		
-		this.checkWorkersStats();
+		
+		Long bestWorker = getBestWorker();
+		if (workerData.getId() != bestWorker) {
+			System.out.println(String.format("Sorry worker #%d, you are not the chosen one", workerData.getId()));
+			return null;
+		}
+		else {
+			System.out.println(String.format("You are welcome, worker #%d", workerData.getId()));
+		}
 		
 		TaskDescription taskDesc = handleResendTasks(workerData);
 		if (taskDesc != null) {
@@ -168,11 +176,36 @@ public class YaTaskScheduler implements IParallelizator {
 		
 		return handleWorkingTasks(workerData);
 	}
+	
+	/**
+	 * Gets the best worker
+	 * @return the best free worker
+	 */
+	private Long getBestWorker() {
 		
-	private void checkWorkersStats() {
+		List<dataaccess.dataobjects.Worker> workersStats = this.checkWorkersStats();
+		Long bestWorkerId = null;
+		for (dataaccess.dataobjects.Worker workerStats : workersStats) {			
+			bestWorkerId = workerStats.getId();
+			for (WorkerTasks workerTasks : workingTasks) {
+				if (workerTasks.taskNotOnWorker(workerStats.getId())) {					
+					continue;
+				}
+				else {
+					bestWorkerId = null;
+					break;
+				}				
+			}
+			if (bestWorkerId != null) {
+				return bestWorkerId;
+			}
+		}
+		return null;
+	}
+	
+	private List<dataaccess.dataobjects.Worker> checkWorkersStats() {
 		
-		List<dataaccess.dataobjects.Worker> workersDO =	
-				DbHandler.getWorkersStats();
+		return DbHandler.getWorkersStatsOrderedByPerformanceDesc();	
 	}
 	
 	
@@ -285,7 +318,7 @@ public class YaTaskScheduler implements IParallelizator {
 	private int numberOfSendTasks;
 	
 	
-	//Auxiliary classes: BEGGINING
+	//Auxiliary classes: BEGGINING	################################################################
 	/**
 	 * 
 	 * @author Simão Fernandes

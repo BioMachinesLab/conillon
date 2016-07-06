@@ -97,6 +97,7 @@ public class Logger {
 			workerDo.setHost_name(wd.getHostName());
 			workerDo.setNum_cores(wd.getNumberOfProcessors());
 			workerDo.setOperative_system(wd.getOperatingSystem());
+			workerDo.setPerformance(wd.getPerformance());
 			workerDo.setIsBanned(false);
 			insertedOidWorker = dataaccess.DbHandler.InsertNewWorker(workerDo);
 			wd.setId(insertedOidWorker);
@@ -104,14 +105,15 @@ public class Logger {
 			// write on file
 			//setFile(Entity.WORKER, event);
 			log(Entity.WORKER, event,
-				String.format("%d,%s,%s,%s,%d,%s,%s", 
+				String.format("%d,%s,%s,%s,%d,%s,%d,%s", 
 							  workerDo.getId(),
 							  workerDo.getIp(), 							  							  
 							  //wd.getWorkerPort(), 
 							  workerDo.getMac_address(),
 							  workerDo.getHost_name(), 
 							  workerDo.getNum_cores(), 
-							  workerDo.getOperative_system(),							  
+							  workerDo.getOperative_system(),
+							  workerDo.getPerformance(),
 							  getTimestamp()
 							  ));
 			return insertedOidWorker;

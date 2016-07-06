@@ -99,9 +99,10 @@ public class Worker {
 	public static int myNumber = 0;
 	static String folderLocation = "conilon";//"C:\\";
 	
-	private BenchmarkOutput benchmarkOutput;
+	private BenchmarkOutput benchmarkOutput = null;;
 	
 	public Worker(boolean isRestricted, GuiClientInfoUpdater guiUpdater) {
+		this.benchmarkOutput = new BenchmarkOutput();
 		this.isRestricted = isRestricted;
 		this.guiUpdater = guiUpdater;
 	}
@@ -270,11 +271,11 @@ public class Worker {
 			Long workerDate = getWorkerDate();
 			this.workerData.setJarDate(workerDate);
 			
-			if (this.benchmarkOutput == null) {
-				System.out.println("Benchmark is null");
+			if (this.benchmarkOutput.getNbInputs() != numberofCores) {
+				throw new RuntimeException("Benchmark as not finished yet :/");				
 			}
 			else {
-				this.workerData.setPerformance(this.benchmarkOutput.getElapsedTime());
+				this.workerData.setPerformance(benchmarkOutput.getAverageElapsedTime());
 			}
 			
 			out.println(localhostinfo.toString());
@@ -319,18 +320,26 @@ public class Worker {
 	 */
 	private void runBenchmark() {
 		Task task = new BenchmarkHandler();
-		TaskId taskId = new TaskId(-1, -1);		
-		WorkerThread workerThread = new WorkerThread(task, taskId, true);		
-		if (execSvc == null || execSvc.isShutdown()) {
-			execSvc = Executors.newFixedThreadPool(numberofCores);
-		}		
-		execSvc.submit(workerThread);
-		execSvc.shutdown();
+		TaskId taskId = new TaskId(0, 0);		
+		WorkerThread workerThread = new WorkerThread(task, taskId, true);
+		
+		ExecutorService pool = null;
 		try {
-			execSvc.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-		} catch (InterruptedException e) {
+			pool = Executors.newFixedThreadPool(numberofCores);		
 			
+			for (int i = 0; i < numberofCores; i++) {
+				pool.submit(workerThread);
+			}			
+			pool.shutdown();
+			pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			
+		} catch (InterruptedException e) {			
 			e.printStackTrace();
+		}
+		finally {
+			if (pool != null && !pool.isShutdown()) {
+				pool.shutdownNow();
+			}
 		}
 	}
 	
@@ -668,6 +677,11 @@ public class Worker {
 			} catch (InterruptedException e) {
 				e.printStackTrace(out);
 			}
+			finally {
+				if (execSvc != null && !execSvc.isShutdown()) {
+					execSvc.shutdownNow();
+				}
+			}
 		}
 
 	}
@@ -709,7 +723,7 @@ public class Worker {
 		private Task task;
 		private TaskId tid;
 		private MyUncaughtExceptionHandler handler = new MyUncaughtExceptionHandler();
-		private Boolean isBenchmark;
+		private Boolean isBenchmark;		
 
 		public WorkerThread(Task task, TaskId tid) {
 			this.task = task;
@@ -793,9 +807,17 @@ public class Worker {
 								}
 							}
 						}
-						else {
-							benchmarkOutput = new BenchmarkOutput();
-							benchmarkOutput.setElapsedTime(elapsedTime);
+						else {					
+							synchronized(benchmarkOutput) {
+								benchmarkOutput.addResult(elapsedTime);
+								//TODO DEVsimao Remove comments
+								String s = String.format("Current elapsed time [%d]; Nb inputs [%d] Average elapsed time [%d]",
+										elapsedTime,
+										benchmarkOutput.getNbInputs(),
+										benchmarkOutput.getAverageElapsedTime());
+								System.out.println(s);
+							}
+							
 						}
 						
 //						System.out.println("Everything OK!");
@@ -890,6 +912,10 @@ public class Worker {
 			public boolean hasBeenKilled() {
 				return killed;
 			}
+		}
+		
+		public BenchmarkOutput getBenchmarkOutput() {
+			return benchmarkOutput;
 		}
 	}
 
