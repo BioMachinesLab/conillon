@@ -49,7 +49,7 @@ public class Worker {
 	private PrintStream out;
 	boolean keepRunning = true;
 	boolean screenSaverMode = false;
-	private float workerEvaluation = 0;;
+	private float workerEvaluation = 0;
 	private int mainWorkerID;
 	private InfrastructureInformation infrastructureInformation;
 
@@ -218,6 +218,7 @@ public class Worker {
 					int serverVersion = (Integer) this.socketIn.readObject();
 					long serverJarDate = (Long) this.socketIn.readObject();
 					if (serverVersion != WorkerData.CONILLON_VERSION || serverJarDate > getWorkerDate()) {
+						out.println((serverVersion != WorkerData.CONILLON_VERSION)+" -- "+serverJarDate +" > "+ getWorkerDate());
 						out.println("Invalid Worker version "
 								+ WorkerData.CONILLON_VERSION
 								+ " UPGRADE to version " + serverVersion);
@@ -282,9 +283,9 @@ public class Worker {
 
 		File worker = new File(folderLocation+"worker.jar");
 		
-		if(worker.exists())
+		if(worker.exists()) {
 			return worker.lastModified();
-		else{
+		}else{
 			//For the case where there is no jar file on the worker
 			return System.currentTimeMillis();
 		}

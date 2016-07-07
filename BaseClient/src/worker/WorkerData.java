@@ -8,7 +8,7 @@ import comm.RunMode;
 public class WorkerData implements Serializable {
 
 	//TODO: Find a way to remove this
-	public static final int CONILLON_VERSION = 10;
+	public static final int CONILLON_VERSION = 12;
 
 	private long startTime;
 	private String endTime = "N/A";

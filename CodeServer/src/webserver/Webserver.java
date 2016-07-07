@@ -37,6 +37,7 @@ public class Webserver extends Thread {
 			try {
 				Socket connectionsocket = serversocket.accept();
 				new DealWithClient(connectionsocket).start();
+				Thread.sleep(500);
 			} catch (Exception e) {
 				System.out.println(e);
 				e.printStackTrace();
@@ -292,7 +293,7 @@ public class Webserver extends Thread {
 			s = s + "Content-Type: text/html\r\n";
 			break;
 		}
-
+		
 		s = s + "\r\n"; // this marks the end of the httpheader
 		return s;
 	}
