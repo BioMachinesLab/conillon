@@ -45,6 +45,7 @@ public class Client {
 	private ObjectOutputStream outputStream;
 	private String desc;
 	private ObjectInputStream inputStream;
+	private Exception returnedException;
 
 	public Client(String desc, ClientPriority priority, String masterAddress,
 			int masterPort, String codeServerAddress, int codeServerPort) {
@@ -226,11 +227,13 @@ public class Client {
 					out.writeObject(tt);
 				} catch (Exception e) {
 					e.printStackTrace();
+					returnedException = e;
 				}
 				// return getResult();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			returnedException = e;
 		}
 		// return null;
 	}
@@ -287,6 +290,10 @@ public class Client {
 			// while(numberOfUnrespondedTasks > 0 && results.size() == 0){
 			while (results.size() == 0) {
 				try {
+					
+					if(returnedException != null)
+						return null;
+					
 					results.wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -322,6 +329,10 @@ public class Client {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
+				returnedException = e;
+				synchronized (results) {
+					results.notifyAll();
+				}
 			}
 		}
 	}
@@ -356,6 +367,7 @@ public class Client {
 
 				}
 			} catch (Exception e) {
+				returnedException = e;
 				e.printStackTrace();
 			}
 		}
@@ -439,5 +451,9 @@ public class Client {
 		// Close the input stream and return bytes
 		is.close();
 		return bytes;
+	}
+	
+	public Exception getReturnedException() {
+		return returnedException;
 	}
 }

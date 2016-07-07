@@ -1,6 +1,5 @@
 package masterserver;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -8,6 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.ConcurrentHashMap;
 
 import result.Result;
 import tasks.CompletedTask;
@@ -36,6 +36,9 @@ public class WorkerThread extends Thread implements Observer {
 	private FeedWorker feedWorker = new FeedWorker();
 
 	private MasterServer master;
+	
+	//TODO debug
+	public static ConcurrentHashMap<Long,Object> hash = new ConcurrentHashMap<Long, Object>();
 
 	public WorkerThread(Socket socket, ClassLoaderObjectInputStream in,
 			ObjectOutputStream out, MasterServer master) {
@@ -74,6 +77,9 @@ public class WorkerThread extends Thread implements Observer {
 
 			this.workerID = master.addWorkerData(this.workerData, this);
 			workerData.setId(workerID);
+			
+			hash.put(workerID, this);
+			
 			System.out.println("Worker id :" + workerID);
 			out.writeObject(workerData);
 			// System.out.println("Sent worker data back");
@@ -181,7 +187,8 @@ public class WorkerThread extends Thread implements Observer {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
+			System.err.println("Problem in main loop of WorkerThread! id="+workerID);
 			terminateWorker();
 		}
 
@@ -223,11 +230,12 @@ public class WorkerThread extends Thread implements Observer {
 					try{
 					
 						Thread.sleep(TIME_TO_SEND_NEXT_PING);
-					
+						
 					}catch(InterruptedException e) {
-						e.printStackTrace();
+						//let the 
+//						e.printStackTrace();
 					}
-					
+				
 					synchronized (out) {
 						out.writeObject(ConnectionType.PING);
 					}
@@ -240,13 +248,14 @@ public class WorkerThread extends Thread implements Observer {
 							terminateWorker();
 						}
 					}
+					
 				}
 //			} catch (InterruptedException e1) {
 //				e1.printStackTrace();
 //				System.out.println("PingPong Over!");
 			} catch (Exception e) {//IO
-				System.out.println("PingPong Over!");
-				e.printStackTrace();
+				System.out.println("PingPong Over! id="+workerID);
+//				e.printStackTrace();
 				terminateWorker();
 				return;
 			}
@@ -274,19 +283,40 @@ public class WorkerThread extends Thread implements Observer {
 //			}
 			
 			taskList.clear();
-			in.close();
-			out.close();
-			socket.close();
+			System.err.println("!!! Cleared taskList id= "+workerID);
+			if(socket != null && !socket.isClosed())
+				in.close();
+			System.err.println("!!! Closed in id= "+workerID);
+			if(socket != null && !socket.isClosed())
+				out.close();
+			System.err.println("!!! Closed out id= "+workerID);
+			if(socket != null && !socket.isClosed())
+				socket.close();
+			System.err.println("!!! Closed socket id= "+workerID);
+			hash.remove(workerID);
+			System.err.println("!!! Everything done! id= "+workerID);
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Worker boom!1 id= "+workerID);
+//			e.printStackTrace();
 			try {
 //watch out				master.removeWorker(this.workerID, this);
-				in.close();
-				out.close();
-				socket.close();
+				System.err.println("!!! Cleared taskList id= "+workerID);
+				if(socket != null && !socket.isClosed())
+					in.close();
+				System.err.println("!!! Closed in id= "+workerID);
+				System.err.println("!!!!!!!id= "+workerID+" "+(out!= null)+" "+(socket != null)+" "+(socket != null && socket.isClosed()));
+				if(socket != null && !socket.isClosed())
+					out.close();
+				System.err.println("!!! Closed out id= "+workerID);
+				if(socket != null && !socket.isClosed())
+					socket.close();
+				System.err.println("!!! Closed socket id= "+workerID);
+				hash.remove(workerID);
+				System.err.println("!!! Everything done! id= "+workerID);
 
 			} catch (IOException e1) {
+				System.err.println("Worker boom!2 id= "+workerID);
 				e1.printStackTrace();
 			}
 		}
@@ -340,9 +370,10 @@ public class WorkerThread extends Thread implements Observer {
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.out.println("Feeder done! Worker boom!3 id="+workerID);
+//				e.printStackTrace();
 				terminateWorker();
-				System.out.println("Feeder done!");
+				
 			}
 		}
 	}

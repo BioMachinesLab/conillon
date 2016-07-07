@@ -12,6 +12,12 @@ public class Result implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private RuntimeException exception;
 	private WorkerData workerData;
+	private int taskId;
+	
+	
+	public Result(int taskId) {
+		this.taskId = taskId;
+	}
 
 	
 	public RuntimeException getException() {
@@ -30,6 +36,8 @@ public class Result implements Serializable{
 		this.workerData = workerData;
 	}
 	
-	
+	public int getTaskId() {
+		return taskId;
+	}
 	
 }

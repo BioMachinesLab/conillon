@@ -61,7 +61,7 @@ public class ClassNameManager {
 	}
 
 	public synchronized void registerPackageName(ClassNameRequest request) {
-		classIds.put(request.getName(), new ClassId(request));
+		classIds.put(request.getName(), new ClassId((int)request.getHashcode(),request));
 		notify();
 	}
 

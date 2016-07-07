@@ -10,13 +10,14 @@ public class ClassId extends Result{
 	private long hashCode;
 	private int classProvider;
 	
-	public ClassId(String name, long hashCode) {
-		super();
+	public ClassId(int taskId, String name, long hashCode) {
+		super(taskId);
 		this.name = name;
 		this.hashCode = hashCode;
 	}
 	
-	public ClassId(ClassNameRequest request) {
+	public ClassId(int taskId, ClassNameRequest request) {
+		super(taskId);
 		this.name = request.getName();
 		this.classProvider = request.getClassProvider();
 		this.hashCode = request.getHashcode();

@@ -415,6 +415,16 @@ public class MasterServer {
 						ClassLoaderObjectInputStream in = new ClassLoaderObjectInputStream(
 								socket.getInputStream(), talkToCodeServer);
 						ConnectionType type = (ConnectionType) in.readObject();
+						//TODO debug
+						
+						System.out.println("OPEN SOCKETS");
+						Iterator<Long> iterator = WorkerThread.hash.keySet().iterator();
+						while(iterator.hasNext()) {
+							Long l = iterator.next();
+							if(WorkerThread.hash.get(l) != null)
+								System.out.print(l+"\t");
+						}
+						System.out.println();
 						if (!(type instanceof ConnectionType)) {
 							System.out
 									.println("Not what i was expecting... Ignoring...");

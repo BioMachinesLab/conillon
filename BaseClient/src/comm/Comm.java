@@ -43,9 +43,9 @@ public class Comm {
 				Thread.sleep(MAX_SLEEP_TIME);
 			} catch (InterruptedException e1) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				System.err.println(e1.getMessage());
 			}
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 			
 		}
 		

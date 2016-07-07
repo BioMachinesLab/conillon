@@ -85,14 +85,12 @@ public class Main {
 		if (args.length > 1)
 			numberOfProcessors = Math.max(new Integer(args[1]),2);
 		out.println(VERSION);
-		execute();
-
 	}
 
 	public static void main(String[] args) {
 		while (!Worker.shutdown()) {
 			try {
-				new Main(args, null, true, false, System.out, new GuiClientInfoUpdater());
+				new Main(args, null, true, false, System.out, new GuiClientInfoUpdater()).execute();
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 				System.out.println("Can't start worker!");
@@ -128,7 +126,7 @@ public class Main {
 
 	}
 
-	private void execute() throws IOException, ClassNotFoundException,
+	public void execute() throws IOException, ClassNotFoundException,
 			InterruptedException {
 		getLocalHostInfo();
 

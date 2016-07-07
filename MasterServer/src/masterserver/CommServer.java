@@ -225,14 +225,15 @@ public class CommServer {
 				}
 
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.err.println("Problem in CommServer handling worker!");
+//				e.printStackTrace();
 				try {
 					in.close();
 					out.close();
 					socket.close();
 				} catch (IOException e1) {
-
-					 e1.printStackTrace();
+					System.err.println("Problem in CommServer ENDING worker!!!");
+//					 e1.printStackTrace();
 				}
 				return;
 

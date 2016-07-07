@@ -64,6 +64,7 @@ public class RoomInformation extends Thread {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} finally {
+			System.out.println("CLOSING!!!");
 			if(scanner != null)
 				scanner.close();
 		}

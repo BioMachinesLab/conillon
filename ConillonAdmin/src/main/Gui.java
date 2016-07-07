@@ -305,7 +305,9 @@ public class Gui extends JApplet implements ActionListener {
 							} else {
 								workerKeys = null;
 								numberOfWorkers.setText("0");
-								workerTableModel.fireTableDataChanged();
+								try {
+									workerTableModel.fireTableDataChanged();
+								} catch(Exception e) {}
 							}
 							int numPending = 0;
 	

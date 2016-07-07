@@ -242,7 +242,8 @@ public class ClassCodeServer {
 //						 System.out.println("Sent class to worker: " + neededClass);
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+//					e.printStackTrace();
+					System.err.println("Problem getting class request!");
 					try {
 						in.close();
 						out.close();
