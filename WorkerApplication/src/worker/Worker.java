@@ -804,7 +804,7 @@ public class Worker {
 //						e.printStackTrace();
 //					}
 					if (getException() != null) {
-						result = new Result();
+						result = new Result(task.getId());
 						result.setException(getException());
 					} else {
 						result = task.getResult();
