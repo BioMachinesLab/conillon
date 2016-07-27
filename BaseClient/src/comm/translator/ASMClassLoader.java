@@ -12,6 +12,13 @@ public class ASMClassLoader extends ClassLoader {
 		this.translator = translator;
 	}
 
+        @Override
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+                synchronized(translator){
+                        return super.loadClass(name);
+                }
+        }
+        
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		try {
