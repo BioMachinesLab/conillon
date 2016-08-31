@@ -46,16 +46,23 @@ public class Client {
 	private String desc;
 	private ObjectInputStream inputStream;
 	private Exception returnedException;
+	private boolean reconnect = true;
 
 	public Client(String desc, ClientPriority priority, String masterAddress,
 			int masterPort, String codeServerAddress, int codeServerPort) {
 		this(desc, priority, masterAddress, masterPort, codeServerAddress,
-				codeServerPort, 0);
+				codeServerPort, 0,true);
+	}
+	
+	public Client(String desc, ClientPriority priority, String masterAddress,
+			int masterPort, String codeServerAddress, int codeServerPort, boolean reconnect) {
+		this(desc, priority, masterAddress, masterPort, codeServerAddress,
+				codeServerPort, 0,reconnect);
 	}
 
 	public Client(String desc, ClientPriority priority, String masterAddress,
 			int masterPort, String codeServerAddress, int codeServerPort,
-			int totalNumberOfTasks) {
+			int totalNumberOfTasks, boolean reconnect) {
 		this.desc = desc;
 		this.priority = priority;
 		// this.problemNumber = problemNumber;
@@ -63,7 +70,8 @@ public class Client {
 		this.masterAddress = masterAddress;
 		this.codeServerAddress = codeServerAddress;
 		this.totalNumberOfTasks = totalNumberOfTasks;
-
+		this.reconnect = reconnect;
+		
 		startTime = System.currentTimeMillis();
 
 		if (masterPort == 0) {
@@ -92,7 +100,7 @@ public class Client {
 				+ codeServerAddress + " on port " + this.codeServerPort);
 		try {
 
-			Streams InOut = new Comm(codeServerPort, codeServerAddress)
+			Streams InOut = new Comm(codeServerPort, codeServerAddress,reconnect)
 					.startConnectionToServer();
 
 			if (InOut != null) {
@@ -152,7 +160,7 @@ public class Client {
 		System.out.println("Trying to connect to Master Server: "
 				+ masterAddress + " on port " + this.masterPort);
 		try {
-			Streams InOut = new Comm(masterPort, masterAddress)
+			Streams InOut = new Comm(masterPort, masterAddress,reconnect)
 					.startConnectionToServer();
 
 			if (InOut != null) {

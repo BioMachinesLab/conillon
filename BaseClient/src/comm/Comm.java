@@ -10,6 +10,14 @@ public class Comm {
 	private int serverport;
 	private String address;
 	private final int MAX_SLEEP_TIME = 2000;
+	private boolean reconnect = true;
+	
+	public Comm(int serverport, String address, boolean reconnect) {
+		super();
+		this.serverport = serverport;
+		this.address = address;
+		this.reconnect = reconnect;
+	}
 	
 	public Comm(int serverport, String address) {
 		super();
@@ -38,6 +46,9 @@ public class Comm {
 			return new Streams(inputStream, outputStream);
 		} catch (IOException e) {
 			errorSocket = false;
+			
+			if(!reconnect)
+				return null;
 			
 			try {
 				Thread.sleep(MAX_SLEEP_TIME);
