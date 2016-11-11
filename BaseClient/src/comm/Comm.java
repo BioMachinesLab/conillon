@@ -33,7 +33,7 @@ public class Comm {
 			
 			System.out.println("Trying to connecto to server: "+ address+" : port"+serverport);
 			Socket socket = new Socket(this.address, this.serverport);
-			System.out.println("Connecto to scoket: "+socket);
+			System.out.println("Connect to socket: "+socket);
 			ObjectInputStream inputStream = new TranslatorObjectInputStream(
 					socket.getInputStream());
 			ObjectOutputStream outputStream = new ObjectOutputStream(
